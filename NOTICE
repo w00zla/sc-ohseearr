@@ -1,0 +1,17 @@
+sc-ohseearr
+Copyright (c) 2026 w00zla
+
+The code is licensed under the MIT License (LICENSE). The model packages under models/ carry their own
+licenses, stated in each package's model.toml and MODEL.md:
+
+- models/paddle-det-tiny: PaddleOCR PP-OCRv6 tiny text detector by PaddlePaddle, unmodified,
+  Apache License 2.0 (https://github.com/PaddlePaddle/PaddleOCR).
+- models/sc-rec-latin: derived from PaddleOCR PP-OCRv6 tiny text recognizer by PaddlePaddle (output layer cut
+  to a Latin character set, then fine-tuned), Apache License 2.0.
+- models/sc-warehouse-layout: NanoDet-Plus-m architecture (https://github.com/RangiLyu/nanodet, Apache License
+  2.0) with weights trained by w00zla, MIT License.
+
+ONNX Runtime (Microsoft, MIT License) is linked statically through the `ort` crate.
+
+Star Citizen is a trademark of Cloud Imperium Rights LLC. This project is not affiliated with or endorsed by
+Cloud Imperium Games.

@@ -1,0 +1,23 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "models/*", "examples"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/w00zla/sc-ohseearr"
+
+[workspace.dependencies]
+sc-ohseearr-core = { path = "crates/core" }
+# Pinned: ort 2.0 is a release candidate; consumers get exactly this version (one onnxruntime per build)
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "download-binaries", "tls-rustls"] }
+image = { version = "0.25", default-features = false }
+fast_image_resize = "6.1.0"
+serde = { version = "1", features = ["derive"] }
+toml = { version = "1", default-features = false, features = ["parse", "serde"] }
+log = "0.4"
+
+# The models' hot paths (resizing, ONNX Runtime's wrapper) stay fast in debug builds
+[profile.dev.package."*"]
+opt-level = 3

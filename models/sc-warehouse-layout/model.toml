@@ -1,0 +1,21 @@
+id = "sc-warehouse-layout"
+version = "1.0.0"
+family = "nanodet"
+license = "MIT"
+description = "Layout detector for the freight manager's warehouse grid: count badges, quality texts, tooltip title and lines"
+source = "NanoDet-Plus-m (RangiLyu/nanodet, Apache-2.0) trained on warehouse recordings, 2026-10-31 (sc-quartermaster c6303ee)"
+
+# The training's mean/std (in 0–255: 103.53, 116.28, 123.675 / 57.375, 57.12, 58.395), in BGR order
+[input]
+order = "bgr"
+mean = [0.406, 0.456, 0.485]
+std = [0.225, 0.224, 0.229]
+width = 480
+height = 320
+
+[nanodet]
+strides = [8, 16, 32, 64]
+reg_max = 7
+classes = ["badge", "quality", "title", "tipline"]
+score = 0.35
+nms = 0.5

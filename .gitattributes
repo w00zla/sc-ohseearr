@@ -1,0 +1,4 @@
+# Text files are LF in every working tree (checkouts may be shared by Windows and Linux)
+* text=auto eol=lf
+*.sh text eol=lf
+*.onnx binary

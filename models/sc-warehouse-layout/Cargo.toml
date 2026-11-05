@@ -1,0 +1,11 @@
+[package]
+name = "sc-ohseearr-model-sc-warehouse-layout"
+description = "Layout detector for the freight manager's warehouse grid: count badges, quality texts, tooltip title and lines"
+version.workspace = true
+edition.workspace = true
+license = "MIT"
+repository.workspace = true
+include = ["src/**", "model.onnx", "model.toml", "MODEL.md"]
+
+[dependencies]
+sc-ohseearr-core = { workspace = true }

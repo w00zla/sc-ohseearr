@@ -1,0 +1,26 @@
+[package]
+name = "sc-ohseearr-examples"
+description = "Examples for sc-ohseearr"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[features]
+directml = ["sc-ohseearr-core/directml"]
+
+[dependencies]
+sc-ohseearr-core = { workspace = true }
+sc-ohseearr-model-paddle-det-tiny = { path = "../models/paddle-det-tiny" }
+sc-ohseearr-model-sc-rec-latin = { path = "../models/sc-rec-latin" }
+sc-ohseearr-model-sc-warehouse-layout = { path = "../models/sc-warehouse-layout" }
+image = { workspace = true, features = ["jpeg", "png"] }
+
+[[example]]
+name = "ocr_dump"
+path = "ocr_dump.rs"
+
+[[example]]
+name = "layout_dump"
+path = "layout_dump.rs"

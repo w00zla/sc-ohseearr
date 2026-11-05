@@ -1,0 +1,11 @@
+[package]
+name = "sc-ohseearr-model-paddle-det-tiny"
+description = "PaddleOCR PP-OCRv6 tiny text detector, unmodified: where text lines are"
+version.workspace = true
+edition.workspace = true
+license = "Apache-2.0"
+repository.workspace = true
+include = ["src/**", "model.onnx", "model.toml", "MODEL.md"]
+
+[dependencies]
+sc-ohseearr-core = { workspace = true }
