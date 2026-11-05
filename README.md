@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo.jpg" alt="ohseearr" width="800"></p>
+
 # sc-ohseearr
 
 OCR for Star Citizen screens, in Rust: an engine on ONNX Runtime (CPU, or GPU via DirectML on Windows), a
