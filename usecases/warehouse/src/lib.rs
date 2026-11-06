@@ -12,6 +12,7 @@
 //!
 //! How it reads, step by step: `read.rs`.
 
+mod fit;
 mod read;
 
 use sc_ohseearr_core::{Error, NanoDet, Ocr, Rect, TextBox, Timings};
@@ -21,7 +22,7 @@ use serde::Serialize;
 pub use read::parse_badge;
 
 /// The fit's weight (on its weaker axis) from which a layout becomes the prior of the next reads.
-pub const STRONG_FIT_WEIGHT: u32 = read::STRONG_FIT_WEIGHT;
+pub const STRONG_FIT_WEIGHT: u32 = fit::STRONG_FIT_WEIGHT;
 
 /// What the warehouse shows in a frame. No tiles: no warehouse grid in the frame.
 #[derive(Debug, Clone, Default, PartialEq, Serialize)]
@@ -122,7 +123,7 @@ pub struct Layout {
 impl Layout {
     pub fn tile_rect(&self, row: usize, col: usize) -> Rect {
         let (x0, y0) = (self.cols[col], self.rows[row]);
-        Rect { x0, y0, x1: x0 + read::TILE_SIZE * self.pitch_x, y1: y0 + read::TILE_SIZE * self.pitch_y }
+        Rect { x0, y0, x1: x0 + fit::TILE_SIZE * self.pitch_x, y1: y0 + fit::TILE_SIZE * self.pitch_y }
     }
 }
 
