@@ -73,7 +73,7 @@ pub fn nms(mut boxes: Vec<Detection>, limit: f32) -> Vec<Detection> {
 }
 
 /// Intersection over union of two boxes.
-pub fn iou(a: Rect, b: Rect) -> f32 {
+pub(crate) fn iou(a: Rect, b: Rect) -> f32 {
     let w = (a.x1.min(b.x1) - a.x0.max(b.x0)).max(0.0);
     let h = (a.y1.min(b.y1) - a.y0.max(b.y0)).max(0.0);
     let i = w * h;

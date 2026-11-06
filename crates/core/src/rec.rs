@@ -15,10 +15,10 @@ use crate::imaging::{FilterType, channels, crop, resize};
 use crate::manifest::{Family, Input, ModelPackage};
 
 /// Lines per recognizer run (RapidOCR's rec_batch_num; default of `CtcRecognizer::batch`)
-pub const BATCH: usize = 6;
+pub(crate) const BATCH: usize = 6;
 /// The input widths on the GPU (default of `CtcRecognizer::gpu_widths`): lines are padded to the next, wider
 /// ones get their own
-pub const GPU_WIDTHS: [usize; 7] = [320, 480, 640, 960, 1280, 1920, 2560];
+pub(crate) const GPU_WIDTHS: [usize; 7] = [320, 480, 640, 960, 1280, 1920, 2560];
 
 pub struct CtcRecognizer {
     engine: Engine,
@@ -72,16 +72,6 @@ impl CtcRecognizer {
     /// The timings since the last call (and starts over).
     pub fn take_timings(&mut self) -> Timings {
         std::mem::take(&mut self.timings)
-    }
-
-    /// The characters it can read (without the blank).
-    pub fn charset(&self) -> &[String] {
-        &self.chars[1..]
-    }
-
-    /// The text in `rect` of `img` as one line, with its mean character confidence.
-    pub fn recognize(&mut self, img: &RgbImage, rect: Rect) -> Result<(String, f32)> {
-        Ok(self.recognize_all(img, &[rect])?.pop().expect("one line"))
     }
 
     /// The text of every rect (in their order).

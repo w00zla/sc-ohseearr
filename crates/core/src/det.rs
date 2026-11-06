@@ -16,7 +16,7 @@ use crate::manifest::{Bytes, Db, Family, Input, ModelPackage};
 
 /// Detector inputs up to this height run on the CPU in GPU mode too (default of `DbDetector::cpu_max_height`):
 /// ~1 ms each there, while each of their shapes held a DirectML session of its own (~13 MB VRAM each, 2026-10-31)
-pub const CPU_MAX_HEIGHT: u32 = 192;
+pub(crate) const CPU_MAX_HEIGHT: u32 = 192;
 
 pub struct DbDetector {
     engine: Engine,

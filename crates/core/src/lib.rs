@@ -18,13 +18,13 @@ mod nanodet;
 mod ocr;
 mod rec;
 
-pub use det::{CPU_MAX_HEIGHT, DbDetector};
+pub use det::DbDetector;
 pub use engine::Timings;
 pub use error::{Error, Result};
-pub use geom::{Detection, Rect, TextBox, iou, nms};
+pub use geom::{Detection, Rect, TextBox, nms};
 pub use imaging::{FilterType, crop, resize};
 pub use lines::{Line, group_lines};
 pub use manifest::{Bytes, ChannelOrder, Ctc, Db, Family, Input, Manifest, ModelPackage, Nanodet};
 pub use nanodet::NanoDet;
 pub use ocr::Ocr;
-pub use rec::{BATCH, CtcRecognizer, GPU_WIDTHS};
+pub use rec::CtcRecognizer;

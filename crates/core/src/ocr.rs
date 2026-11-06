@@ -49,11 +49,6 @@ impl Ocr {
         self.det.detect_on_cpu(img, max_height)
     }
 
-    /// See `CtcRecognizer::recognize`.
-    pub fn recognize(&mut self, img: &RgbImage, rect: Rect) -> Result<(String, f32)> {
-        self.rec.recognize(img, rect)
-    }
-
     /// See `CtcRecognizer::recognize_all`.
     pub fn recognize_all(&mut self, img: &RgbImage, rects: &[Rect]) -> Result<Vec<(String, f32)>> {
         self.rec.recognize_all(img, rects)
