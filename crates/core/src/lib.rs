@@ -22,7 +22,7 @@ pub use det::DbDetector;
 pub use engine::Timings;
 pub use error::{Error, Result};
 pub use geom::{Detection, Rect, TextBox, nms};
-pub use imaging::{FilterType, crop, resize};
+pub use imaging::{FilterType, crop, crop_truncated, resize, truncated_bounds};
 pub use lines::{Line, group_lines};
 pub use manifest::{Bytes, ChannelOrder, Ctc, Db, Family, Input, Manifest, ModelPackage, Nanodet};
 pub use nanodet::NanoDet;

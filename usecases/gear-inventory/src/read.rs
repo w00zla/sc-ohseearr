@@ -9,8 +9,7 @@
 //! Anything unexpected yields `None` fields, never a panic.
 
 use image::RgbImage;
-use image::imageops;
-use sc_ohseearr_core::{FilterType, Line, Ocr, Rect, TextBox, group_lines, resize};
+use sc_ohseearr_core::{FilterType, Line, Ocr, Rect, TextBox, crop_truncated, group_lines, resize};
 use sc_ohseearr_sc::reader::{Field, ReadError};
 use sc_ohseearr_sc::{CenterUi, parse};
 
@@ -256,15 +255,11 @@ pub(crate) fn tooltip_of(lines: Vec<Line>, s: f32) -> Option<RawTooltip> {
 /// The pixels of `rect` in `frame`, scaled by `scale`; the boxes read on it map back through `rect`.
 /// (Not `core::crop`: that one floors and ceils the edges, this one truncates.)
 fn scaled_crop(frame: &RgbImage, rect: Rect, scale: f32) -> RgbImage {
-    let (w, h) = frame.dimensions();
-    let x0 = (rect.x0.max(0.0) as u32).min(w.saturating_sub(1));
-    let y0 = (rect.y0.max(0.0) as u32).min(h.saturating_sub(1));
-    let cw = ((rect.x1 as u32).min(w)).saturating_sub(x0).max(1);
-    let ch = ((rect.y1 as u32).min(h)).saturating_sub(y0).max(1);
-    let crop = imageops::crop_imm(frame, x0, y0, cw, ch).to_image();
+    let crop = crop_truncated(frame, rect);
     if scale == 1.0 {
         return crop;
     }
+    let (cw, ch) = crop.dimensions();
     resize(&crop, ((cw as f32 * scale) as u32).max(1), ((ch as f32 * scale) as u32).max(1), FilterType::CatmullRom)
 }
 
@@ -289,12 +284,7 @@ fn read_area(
     let keep = keep(&in_frame);
     let picked: Vec<usize> = (0..found.len()).filter(|&i| keep[i]).collect();
     let texts = ocr.recognize_all(&crop, &picked.iter().map(|&i| found[i]).collect::<Vec<_>>())?;
-    Ok(picked
-        .into_iter()
-        .zip(texts)
-        .filter(|(_, (t, _))| !t.trim().is_empty())
-        .map(|(i, (text, score))| TextBox { rect: in_frame[i], text, score })
-        .collect())
+    Ok(TextBox::from_reads(picked.into_iter().map(|i| in_frame[i]), texts))
 }
 
 /// Every detected line.

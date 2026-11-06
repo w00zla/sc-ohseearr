@@ -68,11 +68,6 @@ impl Ocr {
     pub fn read(&mut self, img: &RgbImage, max_height: u32) -> Result<Vec<TextBox>> {
         let rects = self.detect(img, max_height)?;
         let texts = self.recognize_all(img, &rects)?;
-        Ok(rects
-            .into_iter()
-            .zip(texts)
-            .filter(|(_, (t, _))| !t.trim().is_empty())
-            .map(|(rect, (text, score))| TextBox { rect, text, score })
-            .collect())
+        Ok(TextBox::from_reads(rects, texts))
     }
 }

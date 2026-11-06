@@ -167,12 +167,12 @@ impl ScreenReader for RefineryReader {
         let image = frame.image;
         let rects = ocr.detect(image, READ_HEIGHT)?;
         let (wide, rest): (Vec<Rect>, Vec<Rect>) = rects.into_iter().partition(|r| r.w() >= r.h() * HEAD_RATIO);
-        let mut boxes = text_boxes(wide.clone(), ocr.recognize_all(image, &wide)?);
+        let mut boxes = TextBox::from_reads(wide.clone(), ocr.recognize_all(image, &wide)?);
         let terminal = boxes.iter().any(|b| is_title(&b.text, labels) || is_head(&b.text, labels));
         if !boxes.iter().any(|b| is_head(&b.text, labels)) {
             return Ok(bare(if terminal { Screen::Terminal } else { Screen::Nothing }, boxes));
         }
-        boxes.extend(text_boxes(rest.clone(), ocr.recognize_all(image, &rest)?));
+        boxes.extend(TextBox::from_reads(rest.clone(), ocr.recognize_all(image, &rest)?));
         boxes.sort_by(|a, b| a.rect.y0.total_cmp(&b.rect.y0).then(a.rect.x0.total_cmp(&b.rect.x0)));
         let found = layouts(&boxes, labels);
         if found.is_empty() {
@@ -214,15 +214,6 @@ fn is_title(text: &str, labels: &Labels) -> bool {
 fn is_head(text: &str, labels: &Labels) -> bool {
     let t = norm(text);
     labels.head.iter().any(|h| t.starts_with(h.as_str()))
-}
-
-fn text_boxes(rects: Vec<Rect>, texts: Vec<(String, f32)>) -> Vec<TextBox> {
-    rects
-        .into_iter()
-        .zip(texts)
-        .filter(|(_, (t, _))| !t.trim().is_empty())
-        .map(|(rect, (text, score))| TextBox { rect, text, score })
-        .collect()
 }
 
 // ---------------------------------------------------------------------------------------------------------------

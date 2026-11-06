@@ -17,8 +17,9 @@
 //! Anything unexpected yields fewer tiles or empty fields, never a panic.
 
 use image::RgbImage;
-use image::imageops;
-use sc_ohseearr_core::{Detection, Error, FilterType, NanoDet, Ocr, Rect, TextBox, nms, resize};
+use sc_ohseearr_core::{
+    Detection, Error, FilterType, NanoDet, Ocr, Rect, TextBox, crop_truncated, nms, resize, truncated_bounds,
+};
 use sc_ohseearr_sc::{Field, Frame, Name, norm, parse};
 
 use crate::{Cell, CellKind, Layout, Tile, Tooltip, Warehouse, WarehouseDiagnostics};
@@ -128,26 +129,6 @@ impl Kind {
             _ => None,
         }
     }
-}
-
-fn part(tile: Rect, (fx0, fy0, fx1, fy1): (f32, f32, f32, f32)) -> Rect {
-    Rect {
-        x0: tile.x0 + fx0 * tile.w(),
-        y0: tile.y0 + fy0 * tile.h(),
-        x1: tile.x0 + fx1 * tile.w(),
-        y1: tile.y0 + fy1 * tile.h(),
-    }
-}
-
-fn contains(r: Rect, x: f32, y: f32) -> bool {
-    x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1
-}
-
-/// The share of `b` that `a` covers.
-fn covered(a: Rect, b: Rect) -> f32 {
-    let w = (a.x1.min(b.x1) - a.x0.max(b.x0)).max(0.0);
-    let h = (a.y1.min(b.y1) - a.y0.max(b.y0)).max(0.0);
-    w * h / (b.w() * b.h()).max(1.0)
 }
 
 // --- texts -------------------------------------------------------------------------------------------------------
@@ -337,7 +318,7 @@ fn tooltip_from_boxes(titles: &[TextBox], lines: &[TextBox], tiles: &[Rect], fra
             let nearest = (0..tiles.len()).min_by(|&i, &j| dist(&tiles[i]).total_cmp(&dist(&tiles[j])));
             tiles
                 .iter()
-                .position(|t| contains(*t, cx, cy))
+                .position(|t| t.contains(cx, cy))
                 .or(nearest.filter(|&i| dist(&tiles[i]) <= near))
                 .map(|i| (b, i))
         })?;
@@ -408,20 +389,9 @@ fn tooltip_from_boxes(titles: &[TextBox], lines: &[TextBox], tiles: &[Rect], fra
     (!name.is_empty()).then_some((Tip { name, quality, scu, title: title.rect, rect }, hovered))
 }
 
-/// The pixels of `rect` in `frame` (its edges truncated, unlike `sc_ohseearr_core::crop`: the read was tuned on
-/// these).
-fn crop(frame: &RgbImage, rect: Rect) -> RgbImage {
-    let (w, h) = frame.dimensions();
-    let x0 = (rect.x0.max(0.0) as u32).min(w.saturating_sub(1));
-    let y0 = (rect.y0.max(0.0) as u32).min(h.saturating_sub(1));
-    let cw = ((rect.x1 as u32).min(w)).saturating_sub(x0).max(1);
-    let ch = ((rect.y1 as u32).min(h)).saturating_sub(y0).max(1);
-    imageops::crop_imm(frame, x0, y0, cw, ch).to_image()
-}
-
 /// A badge's crop upscaled for the recognizer (small text in a box).
 fn upscaled_badge(frame: &RgbImage, rect: Rect) -> RgbImage {
-    let c = crop(frame, rect);
+    let c = crop_truncated(frame, rect);
     resize(&c, c.width() * BADGE_SCALE, c.height() * BADGE_SCALE, FilterType::CatmullRom)
 }
 
@@ -430,12 +400,9 @@ fn upscaled_badge(frame: &RgbImage, rect: Rect) -> RgbImage {
 /// and frame lines around it made PP-OCRv6 tiny read an icon, "图", for "X 1", and small lose the thin 1). None
 /// without one of a badge's shape inside (an empty area, a box cut by the area's edge).
 fn badge_box(frame: &RgbImage, rect: Rect) -> Option<Rect> {
-    let x0 = (rect.x0.max(0.0) as u32).min(frame.width().saturating_sub(1));
-    let y0 = (rect.y0.max(0.0) as u32).min(frame.height().saturating_sub(1));
-    let (w, h) = (
-        ((rect.x1.max(0.0) as u32).min(frame.width()).saturating_sub(x0)) as usize,
-        ((rect.y1.max(0.0) as u32).min(frame.height()).saturating_sub(y0)) as usize,
-    );
+    // The pixels `crop_truncated` takes (its at-least-one-pixel floor is below the minimum size anyway)
+    let (x0, y0, w, h) = truncated_bounds(rect, frame.width(), frame.height());
+    let (w, h) = (w as usize, h as usize);
     if w < 4 || h < 4 {
         return None;
     }
@@ -502,7 +469,7 @@ fn read_lines(ocr: &mut Ocr, frame: &RgbImage, rects: &[Rect]) -> Result<Vec<(St
     let crops: Vec<RgbImage> = rects
         .iter()
         .map(|&r| {
-            let c = crop(frame, r);
+            let c = crop_truncated(frame, r);
             resize(&c, (c.width() as f32 * up) as u32, (c.height() as f32 * up) as u32, FilterType::CatmullRom)
         })
         .collect();
@@ -563,7 +530,7 @@ pub(crate) fn read_grid(
     let mut found: Vec<Detection> = Vec::new();
     for win in windows(pane, s, detector.input_size(), cursor, last) {
         let (ox, oy) = (win.x0.max(0.0).floor(), win.y0.max(0.0).floor());
-        for mut d in detector.detect(&crop(image, win))? {
+        for mut d in detector.detect(&crop_truncated(image, win))? {
             d.rect = Rect { x0: ox + d.rect.x0, y0: oy + d.rect.y0, x1: ox + d.rect.x1, y1: oy + d.rect.y1 };
             found.push(d);
         }
@@ -600,7 +567,7 @@ pub(crate) fn read_grid(
     boxes.extend(titles);
     boxes.extend(lines);
     // The hovered tile's quality (every tile's without a cursor: the hovered rule needs them)
-    let under_cursor = cursor.and_then(|(cx, cy)| tile_rects.iter().position(|t| contains(*t, cx, cy)));
+    let under_cursor = cursor.and_then(|(cx, cy)| tile_rects.iter().position(|t| t.contains(cx, cy)));
     let read: Vec<usize> =
         if cursor.is_some() { under_cursor.into_iter().collect() } else { (0..positions.len()).collect() };
     // The quality text the detector found in the tile's band (a little grown), else the whole band (it reached
@@ -608,10 +575,10 @@ pub(crate) fn read_grid(
     let quality_rects: Vec<Rect> = tile_rects
         .iter()
         .map(|&t| {
-            let band = part(t, QUALITY_BAND);
+            let band = t.part(QUALITY_BAND);
             let found = qualities
                 .iter()
-                .filter(|d| contains(band, d.rect.cx(), d.rect.cy()))
+                .filter(|d| band.contains(d.rect.cx(), d.rect.cy()))
                 .max_by(|a, b| a.score.total_cmp(&b.score));
             found.map_or(band, |d| {
                 let m = QUALITY_PAD * d.rect.h();
@@ -626,7 +593,7 @@ pub(crate) fn read_grid(
     }
     let hidden: Vec<bool> = quality_rects
         .iter()
-        .map(|&r| tooltip.as_ref().is_some_and(|(t, _)| covered(t.rect, r) > TOOLTIP_COVER))
+        .map(|&r| tooltip.as_ref().is_some_and(|(t, _)| t.rect.share_of(r) > TOOLTIP_COVER))
         .collect();
     let qualities: Vec<Option<(u32, bool)>> = quality_texts
         .iter()
@@ -657,23 +624,22 @@ pub(crate) fn read_grid(
     // own (the count's digits are thin: whichever read has them wins), both upscaled, read as a badge's characters
     // only. One the tooltip covers (the cursor near the tile's top: the tooltip opens there) is not read: its text
     // would pass for a count
-    let badge_hidden = |i: usize| {
-        tooltip.as_ref().is_some_and(|(t, _)| covered(t.rect, part(tile_rects[i], BADGE_AREA)) > BADGE_COVER)
-    };
+    let badge_hidden =
+        |i: usize| tooltip.as_ref().is_some_and(|(t, _)| t.rect.share_of(tile_rects[i].part(BADGE_AREA)) > BADGE_COVER);
     let wanted: Vec<usize> =
         (0..positions.len()).filter(|&i| (all_badges || hovered == Some(i)) && !badge_hidden(i)).collect();
     let upscaled = |r: Rect| upscaled_badge(image, badge_box(image, r).unwrap_or(r));
     let mut badge_rects: Vec<(usize, Rect)> = Vec::new();
     for &i in &wanted {
-        let area = part(tile_rects[i], BADGE_AREA);
+        let area = tile_rects[i].part(BADGE_AREA);
         // The fitted grid can sit ~30 px off the tiles: a detected badge around the corner counts, the nearest to
         // where the badge should be. It is read first: with digits in both reads, the first wins, and the box
         // sits on the badge
-        let search = part(tile_rects[i], BADGE_SEARCH);
+        let search = tile_rects[i].part(BADGE_SEARCH);
         let dist = |d: &&Detection| (d.rect.cx() - area.cx()).abs() + (d.rect.cy() - area.cy()).abs();
         let found = badges
             .iter()
-            .filter(|d| contains(search, d.rect.cx(), d.rect.cy()))
+            .filter(|d| search.contains(d.rect.cx(), d.rect.cy()))
             .min_by(|a, b| dist(a).total_cmp(&dist(b)));
         // More room on the right (a share of its height): a digit at the crop's edge is read as "8" or lost
         // ("X 6" -> "X8", "X")
