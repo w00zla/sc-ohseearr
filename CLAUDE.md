@@ -15,7 +15,7 @@ Guidance for Claude Code in this repository.
 - `training/`: pipelines (rec, layout) and recipes producing model packages (uv/PyTorch).
 - `scripts/extract-global-ini.{ps1,sh}`: the game's English texts from `Data.p4k` via the StarBreaker CLI.
 
-Status: local only (public after the user's acceptance). Phases 1–5 of ADR 0004 are built; phase 6, the mining HUD
+Status: private on GitHub (w00zla/sc-ohseearr), public after the user's acceptance. Phases 1–5 of ADR 0004 are built; phase 6, the mining HUD
 reader as acceptance test (ADR 0009), is not. Every decision is an ADR in `docs/adr/`: read `docs/adr/README.md` before
 proposing a design and never re-propose a declined alternative unless its forces changed.
 
