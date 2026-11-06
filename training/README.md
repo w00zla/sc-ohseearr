@@ -67,7 +67,7 @@ PY training/rec    training/recipes/sc-rec-latin.yml          # all steps; --ste
 PY training/layout training/recipes/sc-warehouse-layout.yml
 ```
 
-Common options: `--data-root <dir>` (default `$OHSEEARR_DATA`, else `<repo>/local`), `--out <dir>` (default
+Common options: `--data-root <dir>` (default `$SC_OHSEEARR_DATA`, else `<repo>/local`), `--out <dir>` (default
 `<data root>/training/<id>`), `--set key.sub=value` (override a recipe key, YAML value, e.g.
 `--set train.epochs=2`). The result is `<out>/package/`: copy `model.onnx` (and `dict.txt`, `model.toml`) into
 `models/<id>/` only after checking the metrics and the consumers' regression dumps (`CLAUDE.md`: results must not

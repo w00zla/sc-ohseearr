@@ -28,7 +28,7 @@ here that could move results.
 - **English everywhere**: code, comments, docs, UI texts, commit messages.
 - **ADRs** in `docs/adr/` for architecture decisions, written only after the user decided (skill `adr`).
 - **No game data in git**: no screenshots, recordings, extracted game files, game texts, crops or fonts (Blender Pro is
-  commercial). Local data lives in `local/` (gitignored; here a junction to `../sc-quartermaster/local`). Model weights
+  commercial). Local data lives in `local/` (gitignored: screenshots, recordings, training data, the venv with the NanoDet checkout). Model weights
   trained on such data are fine (ADR 0002).
 - **No compiled-in game texts**: readers anchor on loc keys and get texts from `Frame::locale` (ADR 0007); test fixtures
   may hold the few keys a test needs.
