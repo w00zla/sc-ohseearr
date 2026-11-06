@@ -10,3 +10,4 @@ repository.workspace = true
 sc-ohseearr-core = { workspace = true }
 log = { workspace = true }
 image = { workspace = true }
+serde = { workspace = true }

@@ -1,0 +1,20 @@
+[package]
+name = "sc-ohseearr-refinery"
+description = "sc-ohseearr use case: the refinery screen reader"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+sc-ohseearr-core = { workspace = true }
+sc-ohseearr-sc = { workspace = true }
+
+image = { workspace = true }
+serde = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+sc-ohseearr-model-paddle-det-tiny = { path = "../../models/paddle-det-tiny" }
+sc-ohseearr-model-sc-rec-latin = { path = "../../models/sc-rec-latin" }
+image = { workspace = true, features = ["jpeg", "png"] }

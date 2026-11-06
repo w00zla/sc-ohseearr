@@ -12,13 +12,19 @@ use crate::rec::CtcRecognizer;
 pub struct Ocr {
     pub det: DbDetector,
     pub rec: CtcRecognizer,
+    threads: usize,
 }
 
 impl Ocr {
     /// A detector and a recognizer on the CPU (`threads` each) or the GPU (an error when DirectML does not
     /// work). ONNX Runtime's memory arena keeps the largest run's memory: drop the `Ocr` when reading stops.
     pub fn new(det: &ModelPackage, rec: &ModelPackage, threads: usize, gpu: bool) -> Result<Self> {
-        Ok(Self { det: DbDetector::new(det, threads, gpu)?, rec: CtcRecognizer::new(rec, threads, gpu)? })
+        Ok(Self { det: DbDetector::new(det, threads, gpu)?, rec: CtcRecognizer::new(rec, threads, gpu)?, threads })
+    }
+
+    /// ONNX Runtime's intra-op threads it was made with (for further models on the same terms).
+    pub fn threads(&self) -> usize {
+        self.threads
     }
 
     /// Whether it runs on the GPU.

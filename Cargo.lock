@@ -449,6 +449,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "sc-ohseearr-gear-inventory"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "log",
+ "sc-ohseearr-core",
+ "sc-ohseearr-model-paddle-det-tiny",
+ "sc-ohseearr-model-sc-rec-latin",
+ "sc-ohseearr-sc",
+ "serde",
+]
+
+[[package]]
 name = "sc-ohseearr-model-paddle-det-tiny"
 version = "0.1.0"
 dependencies = [
@@ -470,12 +483,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "sc-ohseearr-refinery"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "log",
+ "sc-ohseearr-core",
+ "sc-ohseearr-model-paddle-det-tiny",
+ "sc-ohseearr-model-sc-rec-latin",
+ "sc-ohseearr-sc",
+ "serde",
+]
+
+[[package]]
 name = "sc-ohseearr-sc"
 version = "0.1.0"
 dependencies = [
  "image",
  "log",
  "sc-ohseearr-core",
+ "serde",
+]
+
+[[package]]
+name = "sc-ohseearr-warehouse"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "log",
+ "sc-ohseearr-core",
+ "sc-ohseearr-model-paddle-det-tiny",
+ "sc-ohseearr-model-sc-rec-latin",
+ "sc-ohseearr-model-sc-warehouse-layout",
+ "sc-ohseearr-sc",
+ "serde",
 ]
 
 [[package]]

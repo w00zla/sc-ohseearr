@@ -11,3 +11,4 @@
 | [0007](0007-game-texts-from-global-ini.md) | Game texts only from global.ini, no compiled-in texts | accepted | 2026-11-05 |
 | [0008](0008-training-produces-packages.md) | Training produces model packages through recipes; data stays local | accepted | 2026-11-05 |
 | [0009](0009-mining-hud-as-acceptance-test.md) | The mining HUD reader is the acceptance test | accepted | 2026-11-05 |
+| [0010](0010-screen-reader-interface.md) | The screen reader interface | accepted | 2026-11-06 |
