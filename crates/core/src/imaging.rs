@@ -1,7 +1,7 @@
 //! Image helpers shared by the models: SIMD resizing, crops, input tensors.
 
-use fast_image_resize::images::{Image, ImageRef};
 pub use fast_image_resize::FilterType;
+use fast_image_resize::images::{Image, ImageRef};
 use fast_image_resize::{PixelType, ResizeAlg, ResizeOptions, Resizer};
 use image::RgbImage;
 use image::imageops;
@@ -15,7 +15,9 @@ use crate::manifest::{ChannelOrder, Input};
 pub fn resize(img: &RgbImage, width: u32, height: u32, filter: FilterType) -> RgbImage {
     let src = ImageRef::new(img.width(), img.height(), img.as_raw(), PixelType::U8x3).expect("an RgbImage's buffer");
     let mut dst = Image::new(width, height, PixelType::U8x3);
-    Resizer::new().resize(&src, &mut dst, &ResizeOptions::new().resize_alg(ResizeAlg::Convolution(filter))).expect("one pixel type, no crop");
+    Resizer::new()
+        .resize(&src, &mut dst, &ResizeOptions::new().resize_alg(ResizeAlg::Convolution(filter)))
+        .expect("one pixel type, no crop");
     RgbImage::from_raw(width, height, dst.into_vec()).expect("width × height × 3 bytes")
 }
 

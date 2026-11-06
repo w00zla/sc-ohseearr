@@ -5,7 +5,12 @@ use sc_ohseearr_core::ModelPackage;
 
 /// The package: the model, its manifest and its dictionary.
 pub fn package() -> ModelPackage {
-    ModelPackage::embedded(include_str!("../model.toml"), include_bytes!("../model.onnx"), Some(include_str!("../dict.txt"))).expect("the embedded package is valid")
+    ModelPackage::embedded(
+        include_str!("../model.toml"),
+        include_bytes!("../model.onnx"),
+        Some(include_str!("../dict.txt")),
+    )
+    .expect("the embedded package is valid")
 }
 
 #[cfg(test)]

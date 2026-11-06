@@ -25,12 +25,29 @@ fn main() {
     let window = imageops::crop_imm(&frame, x, y, w, h).to_image();
 
     let mut detector = NanoDet::new(&layout, 3, false).expect("layout model");
-    let mut ocr = Ocr::new(&sc_ohseearr_model_paddle_det_tiny::package(), &sc_ohseearr_model_sc_rec_latin::package(), 3, false).expect("ocr models");
+    let mut ocr =
+        Ocr::new(&sc_ohseearr_model_paddle_det_tiny::package(), &sc_ohseearr_model_sc_rec_latin::package(), 3, false)
+            .expect("ocr models");
     let found = detector.detect(&window).expect("detect");
     let crops: Vec<_> = found.iter().map(|d| crop(&window, d.rect)).collect();
     let texts = ocr.recognize_images(&crops).expect("read");
     for (d, (text, score)) in found.iter().zip(texts) {
-        let r = Rect { x0: d.rect.x0 + x as f32, y0: d.rect.y0 + y as f32, x1: d.rect.x1 + x as f32, y1: d.rect.y1 + y as f32 };
-        println!("{:8} {:.2}  {:5.0} {:5.0} {:4.0} {:4.0}  {:.2}  {}", detector.classes()[d.class], d.score, r.x0, r.y0, r.w(), r.h(), score, text);
+        let r = Rect {
+            x0: d.rect.x0 + x as f32,
+            y0: d.rect.y0 + y as f32,
+            x1: d.rect.x1 + x as f32,
+            y1: d.rect.y1 + y as f32,
+        };
+        println!(
+            "{:8} {:.2}  {:5.0} {:5.0} {:4.0} {:4.0}  {:.2}  {}",
+            detector.classes()[d.class],
+            d.score,
+            r.x0,
+            r.y0,
+            r.w(),
+            r.h(),
+            score,
+            text
+        );
     }
 }

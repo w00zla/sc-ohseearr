@@ -3,6 +3,7 @@
 //! is normalized, its thresholds and classes. A package is compiled in (a model crate's `package()`) or
 //! loaded from a folder (`ModelPackage::load`).
 
+use crate::error::{Error, Result};
 use std::borrow::Cow;
 use std::path::Path;
 
@@ -106,9 +107,11 @@ pub struct Manifest {
 
 impl Manifest {
     /// Parses and checks a manifest: the family's own section is there and the input has what it needs.
-    pub fn parse(text: &str) -> Result<Self, String> {
-        let m: Manifest = toml::from_str(text).map_err(|e| format!("model.toml: {e}"))?;
-        let need = |ok: bool, what: &str| if ok { Ok(()) } else { Err(format!("{}: {:?} needs {what}", m.id, m.family)) };
+    pub fn parse(text: &str) -> Result<Self> {
+        let m: Manifest = toml::from_str(text).map_err(|e| Error::Package(format!("model.toml: {e}")))?;
+        let need = |ok: bool, what: &str| {
+            if ok { Ok(()) } else { Err(Error::Package(format!("{}: {:?} needs {what}", m.id, m.family))) }
+        };
         match m.family {
             Family::DbDet => need(m.db.is_some(), "a [db] section")?,
             Family::CtcRec => {
@@ -134,7 +137,7 @@ pub struct ModelPackage {
 
 impl ModelPackage {
     /// A compiled-in package (what a model crate's `package()` returns).
-    pub fn embedded(manifest: &str, model: &'static [u8], dict: Option<&'static str>) -> Result<Self, String> {
+    pub fn embedded(manifest: &str, model: &'static [u8], dict: Option<&'static str>) -> Result<Self> {
         let manifest = Manifest::parse(manifest)?;
         let package = Self { manifest, model: Cow::Borrowed(model), dict: dict.map(Cow::Borrowed) };
         package.check()?;
@@ -142,11 +145,17 @@ impl ModelPackage {
     }
 
     /// A package from a folder: `model.toml`, `model.onnx` and the dictionary the manifest names.
-    pub fn load(dir: &Path) -> Result<Self, String> {
-        let read = |name: &str| std::fs::read(dir.join(name)).map_err(|e| format!("{}: {e}", dir.join(name).display()));
-        let manifest = Manifest::parse(&String::from_utf8(read("model.toml")?).map_err(|e| format!("model.toml: {e}"))?)?;
+    pub fn load(dir: &Path) -> Result<Self> {
+        let read = |name: &str| {
+            std::fs::read(dir.join(name)).map_err(|e| Error::Package(format!("{}: {e}", dir.join(name).display())))
+        };
+        let manifest = Manifest::parse(
+            &String::from_utf8(read("model.toml")?).map_err(|e| Error::Package(format!("model.toml: {e}")))?,
+        )?;
         let dict = match &manifest.ctc {
-            Some(ctc) => Some(Cow::Owned(String::from_utf8(read(&ctc.dict)?).map_err(|e| format!("{}: {e}", ctc.dict))?)),
+            Some(ctc) => Some(Cow::Owned(
+                String::from_utf8(read(&ctc.dict)?).map_err(|e| Error::Package(format!("{}: {e}", ctc.dict)))?,
+            )),
             None => None,
         };
         let package = Self { model: Cow::Owned(read("model.onnx")?), manifest, dict };
@@ -154,19 +163,19 @@ impl ModelPackage {
         Ok(package)
     }
 
-    fn check(&self) -> Result<(), String> {
+    fn check(&self) -> Result<()> {
         if self.manifest.family == Family::CtcRec && self.dict.is_none() {
-            return Err(format!("{}: a CTC recognizer needs its dictionary", self.manifest.id));
+            return Err(Error::Package(format!("{}: a CTC recognizer needs its dictionary", self.manifest.id)));
         }
         Ok(())
     }
 
     /// Whether this package is of `family` (an error naming both otherwise).
-    pub(crate) fn expect(&self, family: Family) -> Result<(), String> {
+    pub(crate) fn expect(&self, family: Family) -> Result<()> {
         if self.manifest.family == family {
             Ok(())
         } else {
-            Err(format!("{}: a {:?} model, not {family:?}", self.manifest.id, self.manifest.family))
+            Err(Error::Package(format!("{}: a {:?} model, not {family:?}", self.manifest.id, self.manifest.family)))
         }
     }
 }

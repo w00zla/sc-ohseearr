@@ -3,6 +3,7 @@
 //! lines of similar shape are read together in batches; the output is decoded greedily (blank first, the
 //! dictionary, optionally a space).
 
+use crate::error::{Error, Result};
 use std::time::Instant;
 
 use image::RgbImage;
@@ -35,12 +36,19 @@ pub struct CtcRecognizer {
 
 impl CtcRecognizer {
     /// `threads`: ONNX Runtime's intra-op threads on the CPU; `gpu`: DirectML (an error when it does not work).
-    pub fn new(package: &ModelPackage, threads: usize, gpu: bool) -> Result<Self, String> {
+    pub fn new(package: &ModelPackage, threads: usize, gpu: bool) -> Result<Self> {
         package.expect(Family::CtcRec)?;
         let m = &package.manifest;
         let ctc = m.ctc.as_ref().expect("checked by Manifest::parse");
         let mut chars = vec![String::new()];
-        chars.extend(package.dict.as_deref().expect("checked by ModelPackage").lines().map(|l| l.trim_end_matches('\r').to_string()));
+        chars.extend(
+            package
+                .dict
+                .as_deref()
+                .expect("checked by ModelPackage")
+                .lines()
+                .map(|l| l.trim_end_matches('\r').to_string()),
+        );
         if ctc.space_char {
             chars.push(" ".into());
         }
@@ -72,12 +80,12 @@ impl CtcRecognizer {
     }
 
     /// The text in `rect` of `img` as one line, with its mean character confidence.
-    pub fn recognize(&mut self, img: &RgbImage, rect: Rect) -> Result<(String, f32), String> {
+    pub fn recognize(&mut self, img: &RgbImage, rect: Rect) -> Result<(String, f32)> {
         Ok(self.recognize_all(img, &[rect])?.pop().expect("one line"))
     }
 
     /// The text of every rect (in their order).
-    pub fn recognize_all(&mut self, img: &RgbImage, rects: &[Rect]) -> Result<Vec<(String, f32)>, String> {
+    pub fn recognize_all(&mut self, img: &RgbImage, rects: &[Rect]) -> Result<Vec<(String, f32)>> {
         let started = Instant::now();
         let crops: Vec<RgbImage> = rects.iter().map(|r| crop(img, *r)).collect();
         self.timings.rec_prep += started.elapsed();
@@ -85,18 +93,19 @@ impl CtcRecognizer {
     }
 
     /// The text of every image (one text line each, in their order).
-    pub fn recognize_images(&mut self, crops: &[RgbImage]) -> Result<Vec<(String, f32)>, String> {
+    pub fn recognize_images(&mut self, crops: &[RgbImage]) -> Result<Vec<(String, f32)>> {
         self.recognize_images_in(crops, None)
     }
 
     /// The same, picking only characters of `allowed` (a count: "Xx× 0123456789"): the recognizer otherwise
     /// takes a look-alike now and then. Each step's probability is taken among the allowed characters.
-    pub fn recognize_images_only(&mut self, crops: &[RgbImage], allowed: &str) -> Result<Vec<(String, f32)>, String> {
-        let mask: Vec<bool> = self.chars.iter().map(|c| c.chars().count() == 1 && c.chars().all(|ch| allowed.contains(ch))).collect();
+    pub fn recognize_images_only(&mut self, crops: &[RgbImage], allowed: &str) -> Result<Vec<(String, f32)>> {
+        let mask: Vec<bool> =
+            self.chars.iter().map(|c| c.chars().count() == 1 && c.chars().all(|ch| allowed.contains(ch))).collect();
         self.recognize_images_in(crops, Some(&mask))
     }
 
-    fn recognize_images_in(&mut self, crops: &[RgbImage], allowed: Option<&[bool]>) -> Result<Vec<(String, f32)>, String> {
+    fn recognize_images_in(&mut self, crops: &[RgbImage], allowed: Option<&[bool]>) -> Result<Vec<(String, f32)>> {
         let (height, width) = (self.height, self.width);
         let ratio = |c: &RgbImage| c.width() as f32 / c.height() as f32;
         // Similar widths in one batch: the narrow lines are padded less
@@ -133,21 +142,30 @@ impl CtcRecognizer {
                 }
             }
             let shape = [rows, 3, height as usize, padded as usize];
-            let input = Tensor::from_array((shape, data)).map_err(|e| e.to_string())?;
+            let input = Tensor::from_array((shape, data)).map_err(Error::runtime)?;
             let prepared = Instant::now();
-            let outputs = self.engine.session("rec", &shape)?.run(ort::inputs![input]).map_err(|e| e.to_string())?;
+            let outputs = self.engine.session("rec", &shape)?.run(ort::inputs![input]).map_err(Error::runtime)?;
             let ran = Instant::now();
             self.timings.rec_prep += prepared - started;
             self.timings.rec_run += ran - prepared;
             self.timings.rec_runs += 1;
             self.timings.rec_lines += batch.len() as u32;
-            let (shape, probs) = outputs[0].try_extract_tensor::<f32>().map_err(|e| e.to_string())?;
+            let (shape, probs) = outputs[0].try_extract_tensor::<f32>().map_err(Error::runtime)?;
             let (steps, classes) = (shape[1] as usize, shape[2] as usize);
             if classes != self.chars.len() {
-                return Err(format!("rec model has {classes} classes, the dictionary {}: wrong dictionary", self.chars.len()));
+                return Err(Error::Mismatch(format!(
+                    "rec model has {classes} classes, the dictionary {}: wrong dictionary",
+                    self.chars.len()
+                )));
             }
             for (n, &i) in batch.iter().enumerate() {
-                out[i] = ctc_decode(&probs[n * steps * classes..(n + 1) * steps * classes], steps, classes, &self.chars, allowed);
+                out[i] = ctc_decode(
+                    &probs[n * steps * classes..(n + 1) * steps * classes],
+                    steps,
+                    classes,
+                    &self.chars,
+                    allowed,
+                );
             }
             self.timings.rec_post += ran.elapsed();
         }
@@ -159,14 +177,24 @@ impl CtcRecognizer {
 /// dropped; the score is the mean probability of the kept characters.
 /// `allowed`: only these classes (and the blank) can be picked, each step's probability taken among them (a
 /// "6" the model rates just below a "日" is still a sure "6"); None = every class.
-pub(crate) fn ctc_decode(probs: &[f32], steps: usize, classes: usize, chars: &[String], allowed: Option<&[bool]>) -> (String, f32) {
+pub(crate) fn ctc_decode(
+    probs: &[f32],
+    steps: usize,
+    classes: usize,
+    chars: &[String],
+    allowed: Option<&[bool]>,
+) -> (String, f32) {
     let mut text = String::new();
     let mut scores = Vec::new();
     let mut last = 0usize;
     let ok = |i: usize| i == 0 || allowed.is_none_or(|a| a.get(i).copied().unwrap_or(false));
     for t in 0..steps {
         let row = &probs[t * classes..(t + 1) * classes];
-        let (best, p) = row.iter().enumerate().filter(|&(i, _)| ok(i)).fold((0, f32::MIN), |acc, (i, &v)| if v > acc.1 { (i, v) } else { acc });
+        let (best, p) = row
+            .iter()
+            .enumerate()
+            .filter(|&(i, _)| ok(i))
+            .fold((0, f32::MIN), |acc, (i, &v)| if v > acc.1 { (i, v) } else { acc });
         let p = match allowed {
             Some(_) => {
                 let mass: f32 = row.iter().enumerate().filter(|&(i, _)| ok(i)).map(|(_, &v)| v).sum();

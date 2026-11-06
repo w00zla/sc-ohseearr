@@ -9,8 +9,10 @@
 
 mod det;
 mod engine;
+mod error;
 mod geom;
 mod imaging;
+mod lines;
 mod manifest;
 mod nanodet;
 mod ocr;
@@ -18,8 +20,10 @@ mod rec;
 
 pub use det::{CPU_MAX_HEIGHT, DbDetector};
 pub use engine::Timings;
+pub use error::{Error, Result};
 pub use geom::{Detection, Rect, TextBox, iou, nms};
 pub use imaging::{FilterType, crop, resize};
+pub use lines::{Line, group_lines};
 pub use manifest::{Bytes, ChannelOrder, Ctc, Db, Family, Input, Manifest, ModelPackage, Nanodet};
 pub use nanodet::NanoDet;
 pub use ocr::Ocr;

@@ -1,0 +1,12 @@
+[package]
+name = "sc-ohseearr-sc"
+description = "Star Citizen layer for sc-ohseearr: language tables from global.ini, UI geometry, value parsers"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+sc-ohseearr-core = { workspace = true }
+log = { workspace = true }
+image = { workspace = true }

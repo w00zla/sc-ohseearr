@@ -1,5 +1,6 @@
 //! ONNX Runtime sessions of one model, on the CPU or on the GPU (DirectML).
 
+use crate::error::{Error, Result};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -22,7 +23,7 @@ pub(crate) enum Engine {
 
 impl Engine {
     /// `threads`: ONNX Runtime's intra-op threads on the CPU. `gpu`: DirectML (an error when it does not work).
-    pub(crate) fn new(name: &str, model: Bytes, threads: usize, gpu: bool) -> Result<Self, String> {
+    pub(crate) fn new(name: &str, model: Bytes, threads: usize, gpu: bool) -> Result<Self> {
         if !gpu {
             return Ok(Self::Cpu(session(name, &model, threads, None)?));
         }
@@ -30,21 +31,30 @@ impl Engine {
         let probe = session(name, &model, 1, Some(&[]))?;
         let symbols = match probe.inputs()[0].dtype() {
             ValueType::Tensor { dimension_symbols, .. } => dimension_symbols.to_vec(),
-            other => return Err(format!("{name}: input {other:?}")),
+            other => return Err(Error::Package(format!("{name}: input {other:?}"))),
         };
         Ok(Self::Gpu { model, symbols, sessions: HashMap::new() })
     }
 
     /// The session for an input of `shape`.
-    pub(crate) fn session(&mut self, name: &str, shape: &[usize]) -> Result<&mut Session, String> {
+    pub(crate) fn session(&mut self, name: &str, shape: &[usize]) -> Result<&mut Session> {
         match self {
             Self::Cpu(s) => Ok(s),
             Self::Gpu { model, symbols, sessions } => {
                 if !sessions.contains_key(shape) {
                     let started = Instant::now();
-                    let dims: Vec<(String, i64)> = symbols.iter().zip(shape).filter(|(s, _)| !s.is_empty()).map(|(s, &v)| (s.clone(), v as i64)).collect();
+                    let dims: Vec<(String, i64)> = symbols
+                        .iter()
+                        .zip(shape)
+                        .filter(|(s, _)| !s.is_empty())
+                        .map(|(s, &v)| (s.clone(), v as i64))
+                        .collect();
                     sessions.insert(shape.to_vec(), session(name, model, 1, Some(&dims))?);
-                    log::debug!("OCR {name} on the GPU for {shape:?} in {:?} ({} sessions)", started.elapsed(), sessions.len());
+                    log::debug!(
+                        "OCR {name} on the GPU for {shape:?} in {:?} ({} sessions)",
+                        started.elapsed(),
+                        sessions.len()
+                    );
                 }
                 Ok(sessions.get_mut(shape).expect("inserted above"))
             }
@@ -57,18 +67,26 @@ impl Engine {
 }
 
 /// One session on the CPU (`gpu` None) or on DirectML with these dimensions fixed.
-fn session(name: &str, model: &[u8], threads: usize, gpu: Option<&[(String, i64)]>) -> Result<Session, String> {
-    let e = |x: &dyn std::fmt::Display| format!("{name}: {x}");
+fn session(name: &str, model: &[u8], threads: usize, gpu: Option<&[(String, i64)]>) -> Result<Session> {
+    let e = |x: &dyn std::fmt::Display| Error::Runtime(format!("{name}: {x}"));
     let mut b = Session::builder().map_err(|x| e(&x))?;
-    b = b.with_optimization_level(GraphOptimizationLevel::Level3).map_err(|x| e(&x))?.with_intra_threads(threads).map_err(|x| e(&x))?;
+    b = b
+        .with_optimization_level(GraphOptimizationLevel::Level3)
+        .map_err(|x| e(&x))?
+        .with_intra_threads(threads)
+        .map_err(|x| e(&x))?;
     if let Some(dims) = gpu {
         #[cfg(not(all(windows, feature = "directml")))]
-        return Err(format!("{name}: no GPU in this build ({dims:?}; DirectML: Windows with the feature `directml`)"));
+        return Err(Error::Runtime(format!(
+            "{name}: no GPU in this build ({dims:?}; DirectML: Windows with the feature `directml`)"
+        )));
         // DirectML needs sequential runs without memory patterns (ONNX Runtime's documentation)
         #[cfg(all(windows, feature = "directml"))]
         {
             b = b.with_memory_pattern(false).map_err(|x| e(&x))?.with_parallel_execution(false).map_err(|x| e(&x))?;
-            b = b.with_execution_providers([ort::ep::directml::DirectML::default().build().error_on_failure()]).map_err(|x| e(&x))?;
+            b = b
+                .with_execution_providers([ort::ep::directml::DirectML::default().build().error_on_failure()])
+                .map_err(|x| e(&x))?;
             for (symbol, size) in dims {
                 b = b.with_dimension_override(symbol, *size).map_err(|x| e(&x))?;
             }

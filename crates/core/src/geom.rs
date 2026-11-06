@@ -23,6 +23,16 @@ impl Rect {
         (self.y0 + self.y1) / 2.0
     }
 
+    /// The smallest box holding both.
+    pub fn union(self, b: Rect) -> Rect {
+        Rect { x0: self.x0.min(b.x0), y0: self.y0.min(b.y0), x1: self.x1.max(b.x1), y1: self.y1.max(b.y1) }
+    }
+
+    /// The box shifted by (dx, dy).
+    pub fn offset(self, dx: f32, dy: f32) -> Rect {
+        Rect { x0: self.x0 + dx, y0: self.y0 + dy, x1: self.x1 + dx, y1: self.y1 + dy }
+    }
+
     /// The box scaled by (sx, sy) and clamped to a `w`×`h` image.
     pub(crate) fn scaled_into(self, sx: f32, sy: f32, w: u32, h: u32) -> Rect {
         Rect {

@@ -470,6 +470,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "sc-ohseearr-sc"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "log",
+ "sc-ohseearr-core",
+]
+
+[[package]]
 name = "serde"
 version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"

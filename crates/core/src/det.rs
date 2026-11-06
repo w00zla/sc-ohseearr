@@ -3,6 +3,7 @@
 //! thresholded, dilated, split into connected regions (kept by the mean probability of their own pixels) and
 //! each region's box is grown by `area * unclip / perimeter`. Boxes are axis-aligned (no rotated text).
 
+use crate::error::{Error, Result};
 use std::time::Instant;
 
 use image::RgbImage;
@@ -32,7 +33,7 @@ pub struct DbDetector {
 
 impl DbDetector {
     /// `threads`: ONNX Runtime's intra-op threads on the CPU; `gpu`: DirectML (an error when it does not work).
-    pub fn new(package: &ModelPackage, threads: usize, gpu: bool) -> Result<Self, String> {
+    pub fn new(package: &ModelPackage, threads: usize, gpu: bool) -> Result<Self> {
         package.expect(Family::DbDet)?;
         let m = &package.manifest;
         Ok(Self {
@@ -59,24 +60,25 @@ impl DbDetector {
 
     /// Text boxes in `img`, detected on a copy scaled down to at most `max_height` pixels high (never up), in
     /// `img`'s pixels, top to bottom. In GPU mode small inputs run on the CPU (`cpu_max_height`).
-    pub fn detect(&mut self, img: &RgbImage, max_height: u32) -> Result<Vec<Rect>, String> {
+    pub fn detect(&mut self, img: &RgbImage, max_height: u32) -> Result<Vec<Rect>> {
         self.detect_in(img, max_height, false)
     }
 
     /// The same on the CPU in GPU mode too: for a large input read rarely, whose DirectML session would hold
     /// its VRAM for as long as the detector lives.
-    pub fn detect_on_cpu(&mut self, img: &RgbImage, max_height: u32) -> Result<Vec<Rect>, String> {
+    pub fn detect_on_cpu(&mut self, img: &RgbImage, max_height: u32) -> Result<Vec<Rect>> {
         self.detect_in(img, max_height, true)
     }
 
-    fn detect_in(&mut self, img: &RgbImage, max_height: u32, cpu: bool) -> Result<Vec<Rect>, String> {
+    fn detect_in(&mut self, img: &RgbImage, max_height: u32, cpu: bool) -> Result<Vec<Rect>> {
         let started = Instant::now();
         let (w, h) = img.dimensions();
         let ratio = (max_height as f32 / h as f32).min(1.0);
         let round32 = |v: f32| (((v / 32.0).round() as u32) * 32).max(32);
         let (rw, rh) = (round32(w as f32 * ratio), round32(h as f32 * ratio));
         let resized = resize(img, rw, rh, FilterType::Bilinear);
-        let input = Tensor::from_array(([1usize, 3, rh as usize, rw as usize], to_chw(&resized, rw, &self.input))).map_err(|e| e.to_string())?;
+        let input = Tensor::from_array(([1usize, 3, rh as usize, rw as usize], to_chw(&resized, rw, &self.input)))
+            .map_err(Error::runtime)?;
         let prepared = Instant::now();
         let det = if self.engine.gpu() && (cpu || rh <= self.cpu_max_height) {
             if self.cpu.is_none() {
@@ -86,12 +88,13 @@ impl DbDetector {
         } else {
             &mut self.engine
         };
-        let outputs = det.session("det", &[1, 3, rh as usize, rw as usize])?.run(ort::inputs![input]).map_err(|e| e.to_string())?;
+        let outputs =
+            det.session("det", &[1, 3, rh as usize, rw as usize])?.run(ort::inputs![input]).map_err(Error::runtime)?;
         let ran = Instant::now();
         self.timings.det_prep += prepared - started;
         self.timings.det_run += ran - prepared;
         self.timings.det_runs += 1;
-        let (_, prob) = outputs[0].try_extract_tensor::<f32>().map_err(|e| e.to_string())?;
+        let (_, prob) = outputs[0].try_extract_tensor::<f32>().map_err(Error::runtime)?;
         let mut boxes = db_boxes(prob, rw as usize, rh as usize, &self.db);
         let (sx, sy) = (w as f32 / rw as f32, h as f32 / rh as f32);
         for b in &mut boxes {

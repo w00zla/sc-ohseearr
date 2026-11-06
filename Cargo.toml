@@ -10,6 +10,7 @@ repository = "https://github.com/w00zla/sc-ohseearr"
 
 [workspace.dependencies]
 sc-ohseearr-core = { path = "crates/core" }
+sc-ohseearr-sc = { path = "crates/sc" }
 # Pinned: ort 2.0 is a release candidate; consumers get exactly this version (one onnxruntime per build)
 ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "download-binaries", "tls-rustls"] }
 image = { version = "0.25", default-features = false }

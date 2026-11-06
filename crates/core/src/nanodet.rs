@@ -2,6 +2,7 @@
 //! tooltip lines, …) in a fixed-size input. Much cheaper than the text detector over the same area (the
 //! warehouse: ~4 ms on the CPU where the text detector took ~75 ms), and the boxes come with their meaning.
 
+use crate::error::{Error, Result};
 use std::time::Instant;
 
 use image::RgbImage;
@@ -23,7 +24,7 @@ pub struct NanoDet {
 
 impl NanoDet {
     /// `threads`: ONNX Runtime's intra-op threads on the CPU; `gpu`: DirectML (an error when it does not work).
-    pub fn new(package: &ModelPackage, threads: usize, gpu: bool) -> Result<Self, String> {
+    pub fn new(package: &ModelPackage, threads: usize, gpu: bool) -> Result<Self> {
         package.expect(Family::Nanodet)?;
         let m = &package.manifest;
         Ok(Self {
@@ -62,19 +63,19 @@ impl NanoDet {
     }
 
     /// The boxes in `img` (scaled to the input size), in `img`'s pixels, best first.
-    pub fn detect(&mut self, img: &RgbImage) -> Result<Vec<Detection>, String> {
+    pub fn detect(&mut self, img: &RgbImage) -> Result<Vec<Detection>> {
         let started = Instant::now();
         let (w, h) = img.dimensions();
         let resized = resize(img, self.width, self.height, FilterType::Bilinear);
         let shape = [1usize, 3, self.height as usize, self.width as usize];
-        let input = Tensor::from_array((shape, to_chw(&resized, self.width, &self.input))).map_err(|e| e.to_string())?;
+        let input = Tensor::from_array((shape, to_chw(&resized, self.width, &self.input))).map_err(Error::runtime)?;
         let prepared = Instant::now();
-        let outputs = self.engine.session("layout", &shape)?.run(ort::inputs![input]).map_err(|e| e.to_string())?;
+        let outputs = self.engine.session("layout", &shape)?.run(ort::inputs![input]).map_err(Error::runtime)?;
         let ran = Instant::now();
         self.timings.det_prep += prepared - started;
         self.timings.det_run += ran - prepared;
         self.timings.det_runs += 1;
-        let (_, out) = outputs[0].try_extract_tensor::<f32>().map_err(|e| e.to_string())?;
+        let (_, out) = outputs[0].try_extract_tensor::<f32>().map_err(Error::runtime)?;
         let mut found = decode(out, self.width, self.height, &self.params);
         let (sx, sy) = (w as f32 / self.width as f32, h as f32 / self.height as f32);
         for d in &mut found {
@@ -100,7 +101,8 @@ pub(crate) fn decode(out: &[f32], width: u32, height: u32, p: &Params) -> Vec<De
             for x in 0..fw {
                 let q = &out[i * per_point..(i + 1) * per_point];
                 i += 1;
-                let (class, &score) = q[..classes].iter().enumerate().max_by(|a, b| a.1.total_cmp(b.1)).expect("classes");
+                let (class, &score) =
+                    q[..classes].iter().enumerate().max_by(|a, b| a.1.total_cmp(b.1)).expect("classes");
                 if score < p.score {
                     continue;
                 }
@@ -127,7 +129,13 @@ mod tests {
 
     #[test]
     fn boxes_from_prior_points() {
-        let p = Params { strides: vec![8, 16, 32, 64], reg_max: 7, classes: ["a", "b", "c", "d"].map(String::from).to_vec(), score: 0.35, nms: 0.5 };
+        let p = Params {
+            strides: vec![8, 16, 32, 64],
+            reg_max: 7,
+            classes: ["a", "b", "c", "d"].map(String::from).to_vec(),
+            score: 0.35,
+            nms: 0.5,
+        };
         let (w, h) = (480u32, 320u32);
         let per = p.classes.len() + 4 * (p.reg_max + 1);
         let points: u32 = p.strides.iter().map(|s| w.div_ceil(*s) * h.div_ceil(*s)).sum();
@@ -149,6 +157,12 @@ mod tests {
         assert_eq!(found.len(), 1, "{found:?}");
         assert_eq!(found[0].class, 1);
         let r = found[0].rect;
-        assert!((r.x0 - 64.0).abs() < 0.1 && (r.y0 - 24.0).abs() < 0.1 && (r.x1 - 96.0).abs() < 0.1 && (r.y1 - 56.0).abs() < 0.1, "{r:?}");
+        assert!(
+            (r.x0 - 64.0).abs() < 0.1
+                && (r.y0 - 24.0).abs() < 0.1
+                && (r.x1 - 96.0).abs() < 0.1
+                && (r.y1 - 56.0).abs() < 0.1,
+            "{r:?}"
+        );
     }
 }
