@@ -6,12 +6,12 @@ treated as equal, e.g. μ and µ), `eval.headline` (the set the MODEL.md block l
 """
 import random
 
-import cv2
 import numpy as np
 import onnxruntime as ort
 import torch
 
 from ..common.datasets import read_lines
+from ..common.images import imread
 from . import model as M
 
 
@@ -53,7 +53,7 @@ def torch_reader(model, charset: M.Charset, inp: M.Input, dev: str):
 
 def run(read, rows: list[dict], inp: M.Input, bs: int = 32) -> list[tuple[str, float]]:
     """Reads the rows in batches of similar width (like the engine); keeps the order of rows."""
-    arrays = [inp.prep(cv2.imdecode(np.fromfile(r["file"], np.uint8), cv2.IMREAD_COLOR)) for r in rows]
+    arrays = [inp.prep(imread(r["file"])) for r in rows]
     order = sorted(range(len(rows)), key=lambda i: arrays[i].shape[2])
     out = [("", 0.0)] * len(rows)
     for k in range(0, len(order), bs):
@@ -63,17 +63,37 @@ def run(read, rows: list[dict], inp: M.Input, bs: int = 32) -> list[tuple[str, f
     return out
 
 
+def lev(a: str, b: str) -> int:
+    prev = list(range(len(b) + 1))
+    for i in range(1, len(a) + 1):
+        cur = [i]
+        for j in range(1, len(b) + 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] != b[j - 1])))
+        prev = cur
+    return prev[-1]
+
+
+def metrics(pairs: list[tuple[str, str]]) -> dict:
+    """pairs: (label, read). Lines exactly right, right ignoring spaces, character error rate (spaces ignored)."""
+    n = len(pairs)
+    exact = sum(lab == r for lab, r in pairs)
+    nospace = sum(lab.replace(" ", "") == r.replace(" ", "") for lab, r in pairs)
+    errs = sum(lev(lab.replace(" ", ""), r.replace(" ", "")) for lab, r in pairs)
+    chars = sum(len(lab.replace(" ", "")) for lab, _ in pairs)
+    return {"n": n, "exact": exact / max(1, n), "nospace": nospace / max(1, n), "cer": errs / max(1, chars)}
+
+
 def report(rows: list[dict], reads: list[str], spec: dict, normalize: dict) -> dict:
     pairs = [(r["text"], fix(t, normalize)) for r, t in zip(rows, reads)]
-    res = {"all": M.metrics(pairs)}
+    res = {"all": metrics(pairs)}
     g = spec.get("group_by")
     if g:
         for v in sorted({r.get(g, "") for r in rows}):
-            res[v] = M.metrics([p for p, r in zip(pairs, rows) if r.get(g, "") == v])
+            res[v] = metrics([p for p, r in zip(pairs, rows) if r.get(g, "") == v])
     for name, sub in (spec.get("subsets") or {}).items():
         sel = [p for p in pairs if sub in p[0]]
         if sel:
-            res[name] = M.metrics(sel)
+            res[name] = metrics(sel)
     return res
 
 

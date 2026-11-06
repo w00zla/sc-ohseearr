@@ -21,12 +21,8 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from ..common.datasets import read_lines
+from ..common.images import imread
 from .texts import Texts
-
-
-def _imread(path):
-    return cv2.imdecode(np.fromfile(path, np.uint8), cv2.IMREAD_COLOR)
 
 
 def _draw(rng, d: dict):
@@ -172,7 +168,7 @@ class Renderer:
     def background(self, rng, nrng, style, w, h, cap):
         rule = next(b for b in style["background"] if cap <= b.get("max_cap", math.inf))
         files, b = self.banks[rule["bank"]]
-        img = _imread(rng.choice(files))
+        img = imread(rng.choice(files))
         H, W = img.shape[:2]
         if W < w or H < h:
             s = max(w / W, h / H) * 1.05
@@ -392,28 +388,3 @@ def generate(cfg: dict, recipe, charset: set[str], n: int, out: str, seed: int, 
             lab.write(f"{fn}\t{label}\t{kind}\t{font}\n")
     os.replace(tmp, f"{out}/labels.tsv")
     print(f"{n} lines in {time.time() - t0:.0f} s -> {out}", flush=True)
-
-
-def sheet(path: str, synth_dir: str, real_dir: str | None, k: int = 30, seed: int = 0):
-    """A contact sheet: k synthetic lines (left) next to k real ones (right), each at height 48, with labels."""
-    rng = random.Random(seed)
-    syn = rng.sample(read_lines(synth_dir), k)
-    real = rng.sample(read_lines(real_dir), k) if real_dir else []
-    colw = 760
-    font = ImageFont.load_default()
-
-    def cell(p, text):
-        img = _imread(p)
-        h, w = img.shape[:2]
-        img = cv2.resize(img, (max(1, math.ceil(48 * w / h)), 48), interpolation=cv2.INTER_LINEAR)[:, :colw]
-        c = Image.new("RGB", (colw, 68), (255, 255, 255))
-        c.paste(Image.fromarray(img[..., ::-1]), (0, 0))
-        ImageDraw.Draw(c).text((2, 52), f"{text}   [{h}px]", fill=(0, 110, 0), font=font)
-        return c
-    out = Image.new("RGB", (2 * colw + 20, 68 * k), (255, 255, 255))
-    for i, r in enumerate(syn):
-        out.paste(cell(r["file"], r["text"]), (0, 68 * i))
-    for i, r in enumerate(real):
-        out.paste(cell(r["file"], r["text"]), (colw + 20, 68 * i))
-    out.save(path)
-    print("sheet:", path)

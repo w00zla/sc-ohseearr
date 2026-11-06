@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 
 from ..common.datasets import read_coco
+from ..common.images import imread
 from .evaluate import Package, ground_truth, match
 
 COLORS = [(0, 255, 255), (255, 0, 255), (0, 255, 0), (255, 160, 0), (0, 160, 255), (255, 255, 0)]
@@ -74,7 +75,7 @@ def shots(package: str, images: list[str], out: str, cfg: dict):
     hgt, (ax0, ay0, ax1, ay1), ov = cfg["height"], cfg["area"], cfg.get("overlap", 40)
     sheets = []
     for path in images:
-        f = cv2.imdecode(np.fromfile(path, np.uint8), cv2.IMREAD_COLOR)
+        f = imread(path)
         k = hgt / f.shape[0]
         f = cv2.resize(f, (int(f.shape[1] * k), hgt), interpolation=cv2.INTER_AREA)
         x_lo, x_hi, y_lo, y_hi = int(ax0 * f.shape[1]), int(ax1 * f.shape[1]), int(ay0 * hgt), int(ay1 * hgt)

@@ -11,12 +11,12 @@ import math
 import os
 import time
 
-import cv2
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
 
 from ..common.datasets import read_lines
+from ..common.images import imread
 from . import evaluate as ev
 from . import model as M
 
@@ -30,7 +30,7 @@ class Lines(Dataset):
 
     def __getitem__(self, i):
         path, ids = self.items[i]
-        return self.inp.prep(cv2.imdecode(np.fromfile(path, np.uint8), cv2.IMREAD_COLOR)), ids
+        return self.inp.prep(imread(path)), ids
 
 
 def items_of(folders: list[tuple[str, int]], charset: M.Charset, normalize: dict) -> list[tuple[str, list[int]]]:

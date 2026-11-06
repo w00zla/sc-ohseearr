@@ -14,9 +14,7 @@ import os
 import cv2
 import numpy as np
 
-
-def _imread(path):
-    return cv2.imdecode(np.fromfile(path, np.uint8), cv2.IMREAD_COLOR)
+from ..common.images import imread
 
 
 def screen_tiles(recipe, out_dir: str, b: dict) -> int:
@@ -27,7 +25,7 @@ def screen_tiles(recipe, out_dir: str, b: dict) -> int:
     k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (b.get("kernel", 25), b.get("kernel", 25)))
     n = 0
     for f in files:
-        img = _imread(f)
+        img = imread(f)
         if img is None or (b.get("size") and img.shape[1::-1] != tuple(b["size"])):
             continue
         scr = img[y0:y1, x0:x1].copy()

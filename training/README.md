@@ -14,8 +14,8 @@ in the data root (`local/`, gitignored). Only code and recipes are versioned.
 ```
 training/
   pyproject.toml          the uv project (versions pinned to the venv the models were made with)
-  common/                 recipes (paths, overrides), dataset formats, package writer, pinned downloads
-  rec/                    cut, texts + render (synthetic lines), backgrounds, teacher, train, export, evaluate
+  common/                 recipes (paths, overrides), dataset formats, image files, package writer, pinned downloads
+  rec/                    cut, texts + render (synthetic lines), sheet, backgrounds, teacher, train, export, evaluate
   layout/                 nanodet-plus-m.yml (the architecture), evaluate, sheets (contact sheets)
   recipes/                <id>.yml per model
 ```

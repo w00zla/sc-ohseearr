@@ -1,5 +1,5 @@
 """The recognizer (family `ctc-rec`): its charset, the pre-processing the engine uses, the PyTorch model with its
-head cut to the charset, CTC decoding and the metrics.
+head cut to the charset, CTC decoding.
 
 Classes: 0 = CTC blank, 1..n = the dictionary (`dict.txt`), n+1 = the space (`space_char = true`).
 Pre-processing like the engine: BGR, scaled to the input height keeping the aspect ratio (width rounded up),
@@ -106,22 +106,3 @@ class Exported(torch.nn.Module):
     def forward(self, x):
         return F.softmax(logits(self.model, x), dim=2)
 
-
-def lev(a: str, b: str) -> int:
-    prev = list(range(len(b) + 1))
-    for i in range(1, len(a) + 1):
-        cur = [i]
-        for j in range(1, len(b) + 1):
-            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] != b[j - 1])))
-        prev = cur
-    return prev[-1]
-
-
-def metrics(pairs: list[tuple[str, str]]) -> dict:
-    """pairs: (label, read). Lines exactly right, right ignoring spaces, character error rate (spaces ignored)."""
-    n = len(pairs)
-    exact = sum(lab == r for lab, r in pairs)
-    nospace = sum(lab.replace(" ", "") == r.replace(" ", "") for lab, r in pairs)
-    errs = sum(lev(lab.replace(" ", ""), r.replace(" ", "")) for lab, r in pairs)
-    chars = sum(len(lab.replace(" ", "")) for lab, _ in pairs)
-    return {"n": n, "exact": exact / max(1, n), "nospace": nospace / max(1, n), "cer": errs / max(1, chars)}

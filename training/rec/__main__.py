@@ -140,7 +140,6 @@ def data_sizes(recipe, out):
 
 def cmd_eval(recipe, a):
     from . import evaluate as ev, model as M
-    out = recipe.out_dir(a.out)
     charset = M.Charset.load(a.dict or f"{os.path.dirname(os.path.abspath(a.model))}/dict.txt")
     inp = input_of(recipe)
     t0 = time.time()
@@ -150,7 +149,6 @@ def cmd_eval(recipe, a):
         with open(a.json, "w", encoding="utf-8") as f:
             json.dump(res, f, indent=1)
     print(ev.markdown(recipe, res, None))
-    return out
 
 
 def cmd_teacher(recipe, a):
@@ -167,9 +165,9 @@ def cmd_backgrounds(recipe, a):
 
 
 def cmd_sheet(recipe, a):
-    from . import render
+    from . import sheet
     out = recipe.out_dir(a.out)
-    render.sheet(f"{out}/sheet.png", f"{out}/synth", recipe.path(a.real) if a.real else None)
+    sheet.sheet(f"{out}/sheet.png", f"{out}/synth", recipe.path(a.real) if a.real else None)
 
 
 def main(argv=None):
