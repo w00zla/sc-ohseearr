@@ -92,7 +92,6 @@ struct Probed {
 pub struct GearInventoryReader {
     k: Option<f32>,
     probed: Option<Probed>,
-    diagnostics: bool,
 }
 
 impl GearInventoryReader {
@@ -144,9 +143,8 @@ impl ScreenReader for GearInventoryReader {
         self.probed = None;
     }
 
-    fn set_diagnostics(&mut self, on: bool) {
-        self.diagnostics = on;
-    }
+    /// A no-op: the diagnostics (the read boxes, the scale) cost nothing extra and are always complete.
+    fn set_diagnostics(&mut self, _on: bool) {}
 }
 
 /// Reads one frame of the inventory screen without state, as the companion's `read_components` did: the page
