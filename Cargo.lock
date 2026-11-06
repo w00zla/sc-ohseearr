@@ -536,6 +536,8 @@ dependencies = [
  "sc-ohseearr-model-sc-warehouse-layout",
  "sc-ohseearr-sc",
  "serde",
+ "serde_json",
+ "toml",
 ]
 
 [[package]]
