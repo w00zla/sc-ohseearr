@@ -92,7 +92,7 @@ Examples (`examples/`): `ocr_dump` (detect and read an image, with package folde
 ```sh
 cargo run --release --example ocr_dump -- <image> [max_height] [threads] [--det <dir>] [--rec <dir>]
 cargo run --release --example layout_dump -- <image> [x y w h]
-cargo run --release -p sc-ohseearr-warehouse --example regress -- [folders] [--data <root>]   # likewise for gear-inventory, refinery (--english <global.ini>)
+cargo run --release -p sc-ohseearr-warehouse --example regress-warehouse -- [folders] [--data <root>] [--threads n]   # likewise regress-gear-inventory, regress-refinery (--english <global.ini>)
 cargo test --release --workspace
 ```
 

@@ -232,21 +232,11 @@ impl ScreenReader for WarehouseReader {
 mod screenshots {
     use super::*;
     use sc_ohseearr_sc::norm;
-    use std::path::{Path, PathBuf};
-
-    fn data_root() -> PathBuf {
-        std::env::var_os("SC_OHSEEARR_DATA")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../local"))
-    }
+    use sc_ohseearr_test_support::{data_root, frames, test_ocr};
+    use std::path::PathBuf;
 
     fn shots(dir: &str) -> Vec<PathBuf> {
-        let dir = data_root().join("screenshots").join(dir);
-        let mut files: Vec<PathBuf> = std::fs::read_dir(dir)
-            .map(|d| d.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "jpg")).collect())
-            .unwrap_or_default();
-        files.sort();
-        files
+        frames(&data_root().join("screenshots").join(dir))
     }
 
     #[test]
@@ -256,13 +246,7 @@ mod screenshots {
             eprintln!("screenshots missing, skipped");
             return;
         }
-        let mut ocr = Ocr::new(
-            &sc_ohseearr_model_paddle_det_tiny::package(),
-            &sc_ohseearr_model_sc_rec_latin::package(),
-            4,
-            false,
-        )
-        .unwrap();
+        let mut ocr = test_ocr();
         let mut reader = WarehouseReader::new();
         // Checked against the shots: the tooltip name's start, its quality chip and SCU, the hovered tile's count.
         // Ship components are not booked from the warehouse, and tiny misreads their names ("Mil/3/A Blizard",

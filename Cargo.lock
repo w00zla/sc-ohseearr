@@ -469,12 +469,10 @@ version = "0.1.0"
 dependencies = [
  "image",
  "sc-ohseearr-core",
- "sc-ohseearr-model-paddle-det-tiny",
- "sc-ohseearr-model-sc-rec-latin",
  "sc-ohseearr-sc",
+ "sc-ohseearr-test-support",
  "serde",
  "serde_json",
- "toml",
 ]
 
 [[package]]
@@ -504,12 +502,10 @@ version = "0.1.0"
 dependencies = [
  "image",
  "sc-ohseearr-core",
- "sc-ohseearr-model-paddle-det-tiny",
- "sc-ohseearr-model-sc-rec-latin",
  "sc-ohseearr-sc",
+ "sc-ohseearr-test-support",
  "serde",
  "serde_json",
- "toml",
 ]
 
 [[package]]
@@ -523,18 +519,28 @@ dependencies = [
 ]
 
 [[package]]
-name = "sc-ohseearr-warehouse"
+name = "sc-ohseearr-test-support"
 version = "0.1.0"
 dependencies = [
  "image",
  "sc-ohseearr-core",
  "sc-ohseearr-model-paddle-det-tiny",
  "sc-ohseearr-model-sc-rec-latin",
- "sc-ohseearr-model-sc-warehouse-layout",
- "sc-ohseearr-sc",
- "serde",
  "serde_json",
  "toml",
+]
+
+[[package]]
+name = "sc-ohseearr-warehouse"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "sc-ohseearr-core",
+ "sc-ohseearr-model-sc-warehouse-layout",
+ "sc-ohseearr-sc",
+ "sc-ohseearr-test-support",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

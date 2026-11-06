@@ -579,41 +579,14 @@ refinery_ui_workordercard_title_completed=Completed
     // Slow in debug builds: cargo test --release.
     mod screenshots {
         use super::*;
+        use sc_ohseearr_test_support::{screenshots, shot as frame, test_ocr};
         use std::path::{Path, PathBuf};
 
         const STATION: &str = "CRU-L1 AMBITIOUS DREAM STATION";
 
-        /// `$SC_OHSEEARR_DATA`, else `<repo>/local`
-        fn data_root() -> PathBuf {
-            std::env::var_os("SC_OHSEEARR_DATA")
-                .map(PathBuf::from)
-                .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../local"))
-        }
-
         fn setup(folder: &str) -> Option<(Ocr, PathBuf)> {
-            let shots = data_root().join("screenshots").join(folder);
-            if !shots.is_dir() {
-                eprintln!("screenshots missing, skipped");
-                return None;
-            }
-            let ocr = Ocr::new(
-                &sc_ohseearr_model_paddle_det_tiny::package(),
-                &sc_ohseearr_model_sc_rec_latin::package(),
-                4,
-                false,
-            )
-            .unwrap();
-            Some((ocr, shots))
-        }
-
-        fn frame(dir: &Path, suffix: &str) -> RgbImage {
-            let file = std::fs::read_dir(dir)
-                .unwrap()
-                .flatten()
-                .map(|e| e.path())
-                .find(|p| p.to_string_lossy().ends_with(&format!("{suffix}.jpg")))
-                .unwrap();
-            image::open(file).unwrap().to_rgb8()
+            let dir = screenshots(folder)?;
+            Some((test_ocr(), dir))
         }
 
         fn read(ocr: &mut Ocr, dir: &Path, suffix: &str) -> Option<Refinery> {

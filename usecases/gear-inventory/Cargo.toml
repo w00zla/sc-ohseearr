@@ -14,8 +14,11 @@ image = { workspace = true }
 serde = { workspace = true }
 
 [dev-dependencies]
-sc-ohseearr-model-paddle-det-tiny = { path = "../../models/paddle-det-tiny" }
-sc-ohseearr-model-sc-rec-latin = { path = "../../models/sc-rec-latin" }
+sc-ohseearr-test-support = { path = "../../crates/test-support" }
 image = { workspace = true, features = ["jpeg", "png"] }
 serde_json = "1"
-toml = { workspace = true }
+
+# Unique per package: the examples of a workspace share one output folder
+[[example]]
+name = "regress-gear-inventory"
+path = "examples/regress.rs"

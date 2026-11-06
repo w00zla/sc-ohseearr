@@ -47,7 +47,7 @@ cargo clippy --release --workspace --all-targets --features sc-ohseearr-core/dir
 cargo fmt --all
 cargo run --release --example ocr_dump -- <image> [max_height] [threads] [--det <dir>] [--rec <dir>] [--gpu]
 cargo run --release --example layout_dump -- <image> [x y w h] [--layout <dir>]
-cargo run --release -p sc-ohseearr-<warehouse|gear-inventory|refinery> --example regress -- [folders] [--data <root>]   # refinery: --english <global.ini> [--pack <ini>]
+cargo run --release -p sc-ohseearr-<usecase> --example regress-<usecase> -- [folders] [--data <root>] [--threads n (3)] [--gpu]   # usecase: warehouse, gear-inventory, refinery (needs --english <global.ini> and/or --pack <ini>)
 cargo run --release -p sc-ohseearr-capture-win --example grab -- [exe] [out.png] [delay_s]
 scripts/extract-global-ini.ps1 -StarBreaker <starbreaker.exe> -P4k <Data.p4k> -Out <dir>   # or .sh; -> global-english-<version>.ini
 ```

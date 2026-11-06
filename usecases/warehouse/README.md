@@ -53,6 +53,6 @@ stderr). No expected outputs are kept in git: run it before and after a change (
 files.
 
 ```sh
-cargo run -p sc-ohseearr-warehouse --release --example regress -- --threads 3 > after.jsonl
-# other folders instead of regression.toml's; --data <root> or SC_OHSEEARR_DATA for the data root; --gpu
+cargo run -p sc-ohseearr-warehouse --release --example regress-warehouse > after.jsonl
+# other folders instead of regression.toml's; --data <root> for the data root; --threads n (default 3); --gpu
 ```

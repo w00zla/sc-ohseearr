@@ -39,7 +39,7 @@ git, the images stay local, ADR 0008). `regression.toml` lists the data folders,
 (`$SC_OHSEEARR_DATA`, else `<repo>/local`):
 
 ```sh
-cargo run --release -p sc-ohseearr-refinery --example regress -- --english <global.ini> [--pack <global.ini>] [--diagnostics] [--threads n] [folder...]
+cargo run --release -p sc-ohseearr-refinery --example regress-refinery -- --english <global.ini> [--pack <global.ini>] [--diagnostics] [--data <root>] [--threads n] [--gpu] [folder...]   # threads default 3
 ```
 
 `cargo test -p sc-ohseearr-refinery --release` also runs the screenshot tests over `refinery flow`, `… 2`, `… 3`

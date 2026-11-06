@@ -200,39 +200,12 @@ fn rest(
 mod tests {
     use super::*;
     use sc_ohseearr_sc::norm;
-    use std::path::{Path, PathBuf};
-
-    /// The data root: `SC_OHSEEARR_DATA`, else `<repo>/local`.
-    fn data_root() -> PathBuf {
-        std::env::var_os("SC_OHSEEARR_DATA")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../../local"))
-    }
+    use sc_ohseearr_test_support::{screenshots, shot as frame, test_ocr};
+    use std::path::PathBuf;
 
     fn setup(dir: &str) -> Option<(Ocr, PathBuf)> {
-        let shots = data_root().join("screenshots").join(dir);
-        if !shots.is_dir() {
-            eprintln!("{} missing, skipped", shots.display());
-            return None;
-        }
-        let ocr = Ocr::new(
-            &sc_ohseearr_model_paddle_det_tiny::package(),
-            &sc_ohseearr_model_sc_rec_latin::package(),
-            4,
-            false,
-        )
-        .unwrap();
-        Some((ocr, shots))
-    }
-
-    fn frame(dir: &Path, suffix: &str) -> RgbImage {
-        let file = std::fs::read_dir(dir)
-            .unwrap()
-            .flatten()
-            .map(|e| e.path())
-            .find(|p| p.to_string_lossy().ends_with(&format!("{suffix}.jpg")))
-            .unwrap();
-        image::open(file).unwrap().to_rgb8()
+        let dir = screenshots(dir)?;
+        Some((test_ocr(), dir))
     }
 
     /// Whether a line reads as `label` followed by `value` (letters and digits compared)

@@ -48,7 +48,7 @@ they ran (each prints its read).
 outputs are kept in git: run it before and after a change (or an OCR/model change) and diff the files.
 
 ```sh
-cargo run -p sc-ohseearr-gear-inventory --release --example regress -- --threads 3 > after.jsonl
-# other folders instead of regression.toml's; --data <root> or SC_OHSEEARR_DATA for the data root;
+cargo run -p sc-ohseearr-gear-inventory --release --example regress-gear-inventory > after.jsonl
+# other folders instead of regression.toml's; --data <root> for the data root; --threads n (default 3); --gpu;
 # --stateful runs a GearInventoryReader over each folder's frames (probe + read, kept scale) instead of read_components
 ```
