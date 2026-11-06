@@ -24,3 +24,7 @@ path = "ocr_dump.rs"
 [[example]]
 name = "layout_dump"
 path = "layout_dump.rs"
+
+[dev-dependencies]
+# tests/models.rs: the packages' raw output shapes
+ort = { workspace = true }

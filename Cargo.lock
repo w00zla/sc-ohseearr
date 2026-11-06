@@ -457,6 +457,7 @@ name = "sc-ohseearr-examples"
 version = "0.1.0"
 dependencies = [
  "image",
+ "ort",
  "sc-ohseearr-core",
  "sc-ohseearr-model-paddle-det-tiny",
  "sc-ohseearr-model-sc-rec-latin",

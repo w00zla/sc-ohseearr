@@ -53,7 +53,8 @@ table extracted from the game (`scripts/extract-global-ini.ps1 -StarBreaker <sta
 Each folder under `models/` is a package and a crate at once: `model.onnx`, its manifest `model.toml` (family,
 input normalization, thresholds, classes or dictionary, license, source), `MODEL.md` (what it is for, how it was
 made, measurements) and a crate whose `package()` returns it compiled in. The same folder loads at runtime with
-`ModelPackage::load(dir)`, so a model can be swapped without changing code.
+`ModelPackage::load(dir)`, so a model can be swapped without changing code. `examples/tests/models.rs` runs every
+package on a synthetic image and checks its output shapes against the manifest (no data needed).
 
 | Package | Family | License | |
 |---|---|---|---|
