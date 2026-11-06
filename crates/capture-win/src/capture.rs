@@ -29,8 +29,8 @@ use windows::Win32::UI::WindowsAndMessaging::{
 };
 use windows::core::{Interface, PWSTR};
 
-use crate::geometry::{cursor_in_crop, unpad};
-use crate::{CaptureInfo, Crop, Pixels, Rect, crop};
+use crate::geometry::{Crop, crop, cursor_in_crop, unpad};
+use crate::{Pixels, Rect};
 
 // Waiting for a desktop frame: the game presents continuously, a timeout means nothing changed
 const ACQUIRE_TIMEOUT_MS: u32 = 200;
@@ -114,7 +114,7 @@ impl Window {
 }
 
 /// The mouse cursor in screen coordinates (physical pixels).
-pub fn cursor_pos() -> Option<(i32, i32)> {
+pub(crate) fn cursor_pos() -> Option<(i32, i32)> {
     let mut p = POINT::default();
     unsafe { GetCursorPos(&mut p) }.ok().map(|_| (p.x, p.y))
 }
@@ -137,6 +137,18 @@ pub enum Skip {
     Pointer,
     /// The window is not on the duplicated monitor
     Outside,
+}
+
+/// How the frame came about: the grab's duration and the grabs without a new image since the frame before.
+#[derive(Clone, Copy, Default, Debug, PartialEq, Eq)]
+pub struct CaptureInfo {
+    /// The grab's duration (desktop image to the CPU), ms
+    pub grab_ms: u32,
+    /// Grabs without a new image: none within the timeout, only the pointer moved, the window
+    /// outside the monitor (the next try comes a full interval later)
+    pub skipped_timeout: u32,
+    pub skipped_pointer: u32,
+    pub skipped_outside: u32,
 }
 
 /// A grabbed frame.

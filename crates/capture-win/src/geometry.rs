@@ -11,15 +11,17 @@ pub struct Rect {
 
 /// A part of the monitor's image, in its pixels.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub struct Crop {
-    pub x: u32,
-    pub y: u32,
-    pub width: u32,
-    pub height: u32,
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(crate) struct Crop {
+    pub(crate) x: u32,
+    pub(crate) y: u32,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
 }
 
 /// The window's client area (screen coordinates) within the monitor (`desktop`); None when outside.
-pub fn crop(client: Rect, desktop: Rect) -> Option<Crop> {
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(crate) fn crop(client: Rect, desktop: Rect) -> Option<Crop> {
     let left = client.left.max(desktop.left);
     let top = client.top.max(desktop.top);
     let right = client.right.min(desktop.right);

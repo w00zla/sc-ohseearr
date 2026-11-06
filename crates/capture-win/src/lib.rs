@@ -14,7 +14,6 @@
 
 mod gate;
 mod geometry;
-mod info;
 mod pixels;
 mod rest;
 
@@ -22,12 +21,11 @@ mod rest;
 mod capture;
 
 pub use gate::Gate;
-pub use geometry::{Crop, Rect, crop};
-pub use info::{CaptureInfo, PULL_TIMEOUT_MS};
+pub use geometry::Rect;
 pub use pixels::Pixels;
-pub use rest::{PULL_POLL, REST, REST_PX, Rest};
+pub use rest::{PULL_POLL, PULL_TIMEOUT_MS, REST, Rest};
 
 #[cfg(windows)]
 pub use capture::{
-    CaptureError, Captured, Found, Grab, Skip, Window, WindowCapture, cursor_pos, set_per_monitor_dpi_aware,
+    CaptureError, CaptureInfo, Captured, Found, Grab, Skip, Window, WindowCapture, set_per_monitor_dpi_aware,
 };

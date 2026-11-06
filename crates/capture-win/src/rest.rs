@@ -4,8 +4,11 @@ use std::time::{Duration, Instant};
 
 /// While a reader pulls frames: how often the cursor is looked at
 pub const PULL_POLL: Duration = Duration::from_millis(15);
+/// A pulling reader lets the capture grab the next frame at `now + PULL_TIMEOUT_MS` after a grab (Unix ms), in
+/// case no read answers (the screen changed, the scan stopped)
+pub const PULL_TIMEOUT_MS: u64 = 3000;
 /// How far the cursor may move and still rest (physical pixels)
-pub const REST_PX: i32 = 3;
+pub(crate) const REST_PX: i32 = 3;
 /// How long it must rest before a grab (the game then shows the tooltip of the tile under it)
 pub const REST: Duration = Duration::from_millis(200);
 
