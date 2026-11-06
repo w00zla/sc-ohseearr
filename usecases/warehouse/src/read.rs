@@ -1,5 +1,4 @@
-//! The read (ported unchanged from the Quartermaster companion's `inventory.rs`, 2026-11-06; screenshots and live
-//! frames of 2026-10-18 on).
+//! The read (tuned on screenshots and live frames of 2026-10-18 on).
 //!
 //! The terminal is a screen in the world: the grid's size and spacing change with where the player stands
 //! (column pitch 260–290 px at 1600 px frame height, rows a little tighter), so nothing is fixed on the screen.

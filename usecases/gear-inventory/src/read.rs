@@ -1,6 +1,5 @@
-//! The read itself: geometry, the lit tile, the text areas. Ported unchanged from the Quartermaster companion's
-//! `components.rs`; only the building blocks of `sc-ohseearr-core` / `sc-ohseearr-sc` that compute exactly the
-//! same replace local copies (`CenterUi`, `stack_count`, `group_lines`, `Rect::union`).
+//! The read itself: geometry, the lit tile, the text areas, on the building blocks of `sc-ohseearr-core` /
+//! `sc-ohseearr-sc` (`CenterUi`, `stack_count`, `group_lines`, `Rect::union`).
 //!
 //! The screen is a panel in perspective around the frame's centre: the FOV and the aspect ratio scale it as a
 //! whole about the centre. Every position is measured on 3840×1600 (the user's FOV) as a share of the height

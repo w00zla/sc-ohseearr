@@ -163,8 +163,8 @@ impl Locale {
         all
     }
 
-    /// The keys whose text reads like `text` (compared by `norm`), in either table; key order unspecified. A
-    /// read name ("Mil/3/A Blizzard") resolves to its game identifiers this way.
+    /// The keys whose text reads like `text` (compared by `norm`), in either table, sorted. A read name
+    /// ("Mil/3/A Blizzard") resolves to its game identifiers this way.
     pub fn keys_for(&self, text: &str) -> Vec<&str> {
         let index = self.index.get_or_init(|| {
             let mut index: HashMap<String, Vec<String>> = HashMap::new();
@@ -175,6 +175,10 @@ impl Locale {
                         keys.push(key.clone());
                     }
                 }
+            }
+            // Deterministic output: the tables are hash maps
+            for keys in index.values_mut() {
+                keys.sort();
             }
             index
         });
