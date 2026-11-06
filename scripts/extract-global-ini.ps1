@@ -7,7 +7,7 @@ The game keeps its English texts inside Data.p4k; a language pack on disk replac
 (ADR 0007), so players without a pack need this file. It is written as global-english-<version>.ini into the
 output folder, the version from build_manifest.id next to Data.p4k, so a stale file is obvious after a patch.
 
-Needs the StarBreaker CLI (https://github.com/w00zla/starbreaker-qm, `starbreaker p4k extract`). Untested while
+Needs the StarBreaker CLI (https://github.com/w00zla/starbreaker-ps, `starbreaker p4k extract`). Untested while
 the game runs and holds Data.p4k open.
 
 .EXAMPLE
