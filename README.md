@@ -3,12 +3,39 @@
 # sc-ohseearr
 
 OCR for Star Citizen screens, in Rust: an engine on ONNX Runtime (CPU, or GPU via DirectML on Windows), a
-collection of model packages, and (later) the readers of real game screens and the training pipelines behind
-the models. It started as the OCR core of the Quartermaster companion app and is meant for any app that reads
-the game's UI.
+collection of model packages, readers of real game screens, the game's language tables, a window capture and the
+training pipelines behind the models. It started as the OCR core of the Quartermaster companion app and is meant for
+any app that reads the game's UI.
 
-> Status: early. The engine and the first three model packages are here; the game-specific layer, the screen
-> readers, the training pipelines and the capture are planned (`docs/adr/`). APIs will change until 1.0.
+> Status: early, APIs will change until 1.0. Decisions and the plan: [`docs/adr/`](docs/adr/README.md). The
+> acceptance test of the layering, a mining HUD reader built only from these parts, is still to come.
+
+## Layout
+
+| Path | Crate | What |
+|---|---|---|
+| `crates/core` | `sc-ohseearr-core` | engine: model families, model packages, `Ocr`, line grouping, image helpers |
+| `crates/sc` | `sc-ohseearr-sc` | the game: `Locale` (texts from `global.ini` by loc key, names → loc keys), `CenterUi`, value parsers, the `ScreenReader` interface |
+| `crates/capture-win` | `sc-ohseearr-capture-win` | live capture of a game window on Windows (DXGI), cursor rest, change gate |
+| `models/*` | `sc-ohseearr-model-*` | model packages (below) |
+| `usecases/*` | `sc-ohseearr-<screen>` | screen readers with their cards and regression setup: `warehouse`, `gear-inventory`, `refinery` |
+| `training/` | — | training pipelines and recipes that produce model packages |
+| `scripts/` | — | `extract-global-ini.{ps1,sh}`: the game's English texts from `Data.p4k` (StarBreaker CLI) |
+
+## Screen readers
+
+| Use case | Screen | Pattern |
+|---|---|---|
+| [`warehouse`](usecases/warehouse/README.md) | freight manager's warehouse grid and tooltip | a learned layout model, then targeted reads |
+| [`gear-inventory`](usecases/gear-inventory/README.md) | character inventory: hovered item's tooltip, page, tile | calibrated geometry around the frame's centre |
+| [`refinery`](usecases/refinery/README.md) | refinery terminal's work orders | text anchors by loc key (needs the game's texts) |
+
+Each implements `sc::ScreenReader` (`probe`, `read`, `reset`, `set_diagnostics`) on a `Frame { id, image, cursor,
+locale }` and returns neutral output: what the game shows, uncertain values as `Field` (value, raw text, score,
+ambiguous), names as `Name` with candidate loc keys. Which screen is visible is the app's business.
+
+The game's texts: readers never carry them. Pass a `Locale` built from the player's language pack and/or the English
+table extracted from the game (`scripts/extract-global-ini.ps1 -StarBreaker <starbreaker.exe> -P4k <Data.p4k>`).
 
 ## Model families
 
@@ -65,8 +92,12 @@ Examples (`examples/`): `ocr_dump` (detect and read an image, with package folde
 ```sh
 cargo run --release --example ocr_dump -- <image> [max_height] [threads] [--det <dir>] [--rec <dir>]
 cargo run --release --example layout_dump -- <image> [x y w h]
+cargo run --release -p sc-ohseearr-warehouse --example regress -- [folders] [--data <root>]   # likewise for gear-inventory, refinery (--english <global.ini>)
 cargo test --release --workspace
 ```
+
+Test and regression data (screenshots, recordings) are not in the repository: the tests and `regress` examples look in
+`$SC_OHSEEARR_DATA`, else `local/`, and skip what is missing.
 
 ## License
 
