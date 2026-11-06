@@ -468,7 +468,6 @@ name = "sc-ohseearr-gear-inventory"
 version = "0.1.0"
 dependencies = [
  "image",
- "log",
  "sc-ohseearr-core",
  "sc-ohseearr-model-paddle-det-tiny",
  "sc-ohseearr-model-sc-rec-latin",
@@ -504,7 +503,6 @@ name = "sc-ohseearr-refinery"
 version = "0.1.0"
 dependencies = [
  "image",
- "log",
  "sc-ohseearr-core",
  "sc-ohseearr-model-paddle-det-tiny",
  "sc-ohseearr-model-sc-rec-latin",
@@ -529,7 +527,6 @@ name = "sc-ohseearr-warehouse"
 version = "0.1.0"
 dependencies = [
  "image",
- "log",
  "sc-ohseearr-core",
  "sc-ohseearr-model-paddle-det-tiny",
  "sc-ohseearr-model-sc-rec-latin",

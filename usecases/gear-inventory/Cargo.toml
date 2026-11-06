@@ -12,7 +12,6 @@ sc-ohseearr-sc = { workspace = true }
 
 image = { workspace = true }
 serde = { workspace = true }
-log = { workspace = true }
 
 [dev-dependencies]
 sc-ohseearr-model-paddle-det-tiny = { path = "../../models/paddle-det-tiny" }
