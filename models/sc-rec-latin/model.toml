@@ -3,7 +3,7 @@ version = "1.0.0"
 family = "ctc-rec"
 license = "Apache-2.0"
 description = "PP-OCRv6 tiny text recognizer cut to 318 Latin characters and fine-tuned on Star Citizen's UI font (Blender Pro)"
-source = "Derived from PaddlePaddle/PP-OCRv6_tiny_rec (Apache-2.0); fine-tuned 2026-10-31 (sc-quartermaster 23d81f7)"
+source = "Derived from PaddlePaddle/PP-OCRv6_tiny_rec (Apache-2.0); fine-tuned 2026-10-31 (sc-quartermaster b46fa78)"
 
 # PaddleOCR's recognizer input: BGR, x/127.5 - 1
 [input]
