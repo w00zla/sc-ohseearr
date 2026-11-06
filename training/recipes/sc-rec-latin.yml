@@ -1,0 +1,338 @@
+# sc-rec-latin: PP-OCRv6 tiny rec cut to Latin and fine-tuned on Star Citizen's UI font (Blender Pro).
+# Paths are relative to the data root (default <repo>/local). Data needed (never in git):
+#   fonts-sc/ttf/*.ttf            the game's fonts, converted from the player's own Data.p4k (training/README.md)
+#   ${SC_GLOBAL_INI}              the English global.ini the game uses (e.g. <install>/LIVE/data/Localization/english/global.ini)
+#   localization/sc-deutsch/      a German language pack (global.ini)
+#   ocr-train/bg, ocr-train/bg-ref  background banks (tooltip areas from recordings; terminal tiles built from screenshots)
+#   ocr-train/teacher             real warehouse/refinery lines labelled by the cut model (anti-forgetting)
+#   ocr-eval, ocr-eval-teacher    the evaluation lines
+id: sc-rec-latin
+family: ctc-rec
+
+package:
+  version: 1.0.0
+  license: Apache-2.0
+  description: PP-OCRv6 tiny text recognizer cut to 318 Latin characters and fine-tuned on Star Citizen's UI font (Blender Pro)
+  source: Derived from PaddlePaddle/PP-OCRv6_tiny_rec (Apache-2.0); fine-tuned {date} (sc-ohseearr {commit}, recipe {recipe})
+
+# The original model: its ONNX and dictionary (the cut), its PyTorch weights (the fine-tune's start)
+base:
+  onnx: {repo: PaddlePaddle/PP-OCRv6_tiny_rec_onnx, revision: 2612ab37152ae0a677521bae4e1e3d4fb4cf7c30, file: inference.onnx,
+         sha256: 9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6}
+  yml: {repo: PaddlePaddle/PP-OCRv6_tiny_rec_onnx, revision: 2612ab37152ae0a677521bae4e1e3d4fb4cf7c30, file: inference.yml,
+        sha256: 66170210bad538e83fff3c4a3867e547d6bf20b50d64b20347c4b913f3034ea1}
+  weights: {repo: PaddlePaddle/PP-OCRv6_tiny_rec_safetensors, revision: 6f2d2d51b4b4226d7a2329a02f416f4994106f3a}
+
+# What the cut keeps (besides blank and space): ASCII, Latin-1, Latin Extended-A (Polish, Czech packs), μ, ▲▼
+charset:
+  ranges: [[0x21, 0x7E], [0xA0, 0x17F]]
+  chars: "μ▲▼"
+
+# The engine's input: height, nominal width (lines are padded to at least this), widest line in training
+input: {height: 48, width: 320, max_width: 1920}
+
+synth:
+  count: 100000
+  seed: 2
+  val_count: 5000
+  val_seed: 3
+  workers: null            # default: CPU count - 2
+  packs:
+    en: ${SC_GLOBAL_INI}
+    de: localization/sc-deutsch/global.ini
+  char_map: {"’": "'", "‘": "'", "“": "\"", "”": "\"", "–": "-", "—": "-",
+             "…": "...", " ": " ", "\t": " ", "μ": "µ"}
+  reject: ["(?i)PLACEHOLDER", "MISSING"]
+  random_exclude: "μ"
+  corpora:
+    en_names: {ini: {packs: [en], keys: [item_name], lines: join, min_len: 2, max_len: 60}}
+    en_desc: {ini: {packs: [en], keys: [item_desc], lines: split, min_len: 2}}
+    de_names: {ini: {packs: [de], keys: [item_name], lines: join, min_len: 2, max_len: 60}}
+    de_desc: {ini: {packs: [de], keys: [item_desc], lines: split, min_len: 2}}
+    amp: {ini: {packs: [en, de], lines: split, contains: "&"}}
+    commodities: {ini: {packs: [en], keys: [items_commodities_], exclude_keys: [desc], lines: raw, max_len: 30, exclude_chars: "["}}
+    commodities_plain: {match: {from: commodities, regex: "^[^(]*$"}}               # no "(...)" yet
+    ref_ui: {ini: {packs: [en], keys: [refinery_ui], lines: split}}
+    prefixed: {match: {from: en_names, regex: "^[A-Z][a-z]{1,3}/\\d/[A-Z] "}}          # "Mil/3/A Blizzard"
+    prefixes: {match: {from: prefixed, regex: "^([^ /]+)", group: 1}}
+    cap_words: {words: {from: [en_desc, de_desc], head: 4000, strip: ".,;:()\"'", min_len: 3, max_len: 12, capitalized: true, alpha: true}}
+  lists:
+    amp_pairs: ["Klaus & Werner", "Tyler Design & Tech", "Medium & Heavy", "Light & Medium", "Light & Heavy",
+                "Kruger & Co", "Hurston & Sons", "Sakura & Sun", "Behring & Co", "R&D", "Q&A", "Search & Rescue",
+                "Mining & Salvage", "Food & Drink", "Arms & Armor"]
+    ui_words: ["QUALITY", "QTY", "YIELD", "REFINE", "COST", "MATERIAL", "SETUP", "COMPLETED", "PROCESSING", "DETAILS",
+               "STATION PROFILE", "USER DETAILS", "CURRENT CAPACITY", "FREE SPACE", "INERT", "REFINABLE", "PROCESSING TIME",
+               "// FUNDS", "// USER", "LOOTING VIEW", "MOVE ALL", "CLEAR FILTERS", "PERSONAL / ALL", "LOCAL / LOCAL",
+               "EQUIPMENT", "CAPACITY:", "SCU", "// RAW MATERIALS", "// IN MANIFEST", "// TO REFINE",
+               "MATERIALS SELECTED", "MATERIALS YIELDED (CSCU)", "REFINEMENT CENTER", "// MODULE-FD57", "TOUCH TO START",
+               "STORAGE ACCESS", "SETUP WORK ORDER", "// MATERIAL SELECTION", "// MATERIAL SPECIALIZATIONS"]
+    amp_templates: &amp_templates ["Manufacturer: {a}", "Hersteller: {a}", "Core Compatibility: {a}", "Kern-Kompatibilität: {a}",
+                                   "{a}", "{a}'s {w}", "{a} {w}", "Item Type: {a}"]
+
+  # The mix: kinds of lines by weight, each with a text spec (or a label_value layout) and a style
+  kinds:
+    - name: amp                 # Blender Pro's "&" looks like an "Ɛ": the reason for the fine-tune
+      w: 0.05
+      style: tooltip
+      text:
+        one_of:
+          - {w: 0.4, pick: amp, wrap: [35, 55], need: "&"}
+          - {w: 0.3, t: *amp_templates, with: {a: {pick: amp_pairs}, w: "{lower:cap_words}"}}
+          - w: 0.3
+            t: *amp_templates
+            with:
+              a: {one_of: [{w: 0.12, t: "{pick:cap_words}&{pick:cap_words}"}, {w: 0.88, t: "{pick:cap_words} & {pick:cap_words}"}]}
+              w: "{lower:cap_words}"
+    - {name: rand, w: 0.25, style: tooltip, text: {random: {min: 3, max: 40, unicode: 0.6, space: 0.18}}}
+    - name: term                # refinery terminal and warehouse UI: mostly upper case
+      w: 0.13
+      style: term
+      text:
+        one_of:
+          - {w: 0.3, upper: 0.88, one_of: [{w: 0.7, pick: commodities}, {w: 0.3, t: "{pick:commodities_plain}{choice: (Ore)| (Raw)}"}]}
+          - {w: 0.2, upper: 0.88, pick: ref_ui, wrap: [25, 50]}
+          - w: 0.25
+            one_of:
+              - {w: 0.20, t: "{int:0:999}"}
+              - {w: 0.075, t: "{int:-99:99:+d}%"}
+              - {w: 0.075, t: "{int:0:100}{choice:%| %}"}
+              - {w: 0.15, t: "{int:1:99999:,} {choice:SCU|CSCU|cSCU|aUEC|UEC}"}
+              - {w: 0.10, t: "{int:1:9999999:,} aUEC"}
+              - {w: 0.05, t: "{int:0:23}h {int:0:59}m"}
+              - {w: 0.05, t: "{int:0:59}m {int:0:59}s"}
+              - {w: 0.10, t: "{int:1:9999} CSCU {choice:REFINABLE|INERT|FREE SPACE}"}
+              - {w: 0.10, t: "{float:0:999}"}
+              - {w: 0.10, t: "{int:0:99999}{choice:%| SCU|K|M/5G|K/167K}"}
+          - {w: 0.15, upper: 0.88, one_of: [{w: 39, pick: ui_words}, {w: 1, t: "WORK ORDER {int:0:9}"}]}
+          - {w: 0.1, upper: 0.88, repeat: {pick: cap_words}, n: [1, 3], sep: " "}
+    - name: stat                # tooltip stat lines: "Label: value", value in a column, coloured, ▲▼
+      w: 0.15
+      style: tooltip
+      label_value:
+        suffix: ":"
+        column: 0.7             # chance of a column gap instead of one space
+        gap: [0.2, 7]           # the column gap in cap heights (plus a space)
+        tri_gap: [0.45, 0.8]
+        line_colour: {prob: 0.15, good: 0.5, good_colours: [green], bad_colours: [red, amber], tri: 0.6, tri_up: "▲", tri_down: "▼"}
+        value_colour: {prob: 0.25, colours: [green, red, amber, term_yellow, term_orange]}
+        labels: {"Fire Rate": 1, "Impact Force": 1, "Recoil Kick": 1, "Recoil Smoothness": 1, "Recoil Handling": 1,
+                 "Damage Mitigation": 2, "Min Temp": 2, "Max Temp": 2, "Integrity": 1, "Coolant Rating": 1, "Power Pips": 1,
+                 "Quantum Speed": 1, "Max. Shield Strength": 1, "Volume": 1, "Temp. Rating": 1, "Rate Of Fire": 1,
+                 "Effective Range": 1, "Magazine Size": 1, "Carrying Capacity": 1, "Quantum Fuel Burn": 1,
+                 "Max. Assist Distance": 1, "Damage Reduction": 1, "Radiation Scrub Rate": 1, "Power Draw": 1,
+                 "Heat Generation": 1, "EM Signature": 1, "IR Signature": 1, "Radiation Capacity": 1,
+                 "Radiation Dissipation": 1, "Radiation Protection": 1, "Aim Time": 1, "Spread": 1, "Ammo Capacity": 1,
+                 "Shield HP": 1, "Regen Rate": 1, "Cooling Rate": 1, "Resistance": 1, "Drive Speed": 1, "Spool Time": 1}
+        # Value formats per label: weighted templates; `tri: true` = may carry a ▲/▼ marker
+        values:
+          pct: &pct [{w: 0.3, t: "{sign}0.00 %", tri: true}, {w: 0.7, t: "{sign}{float:0:60} %", tri: true}]
+          Impact Force: *pct
+          Recoil Kick: *pct
+          Recoil Smoothness: *pct
+          Recoil Handling: *pct
+          Damage Mitigation: [{w: 0.25, t: "0.{int:0:99:02d}"}, {w: 0.25, t: "{float:0:3}"},
+                              {w: 0.15, t: "{sign}0.00 %", tri: true}, {w: 0.35, t: "{sign}{float:0:60} %", tri: true}]
+          Fire Rate: [{w: 0.7, t: "{float:30:1500} RPM", tri: true}, {w: 0.3, t: "{int:30:1500} rpm"}]
+          Rate Of Fire: [{w: 0.25, t: "{int:30:900} rpm / {int:300:1500} rpm"}, {w: 0.75, t: "{int:30:1500} rpm"}]
+          temp: &temp [{w: 0.5, t: "{sign}{float:0:300} °C"}, {w: 0.3, t: "{sign}{float:0:300}"}, {w: 0.2, t: "{int:-250:300} °C"}]
+          Min Temp: *temp
+          Max Temp: *temp
+          Temp. Rating: [{t: "{int:-250:0} / {int:10:300} °C"}]
+          amount: &amount [{w: 0.2, t: "{float:0:30}"}, {w: 0.05, t: "{int:0:30}"}, {w: 0.2, t: "{float:0:500}"},
+                           {w: 0.05, t: "{int:0:500}"}, {w: 0.2, t: "{float:0:5000}"}, {w: 0.05, t: "{int:0:5000}"},
+                           {w: 0.2, t: "{float:0:100000}"}, {w: 0.05, t: "{int:0:100000}"}]
+          Integrity: *amount
+          Max. Shield Strength: *amount
+          Coolant Rating: *amount
+          Power Pips: *amount
+          Power Draw: *amount
+          Heat Generation: *amount
+          EM Signature: *amount
+          IR Signature: *amount
+          Quantum Speed: [{t: "{float:50:400} Mm/s"}]
+          volume: &volume [{w: 0.4, t: "{choice:1|2|5|10|25}{choice:0|00|000|0000|00000} µSCU"},
+                           {w: 0.35, t: "{float:1:500:.1f}K µSCU"}, {w: 0.25, t: "{int:1:900}{choice:k|K} µSCU"}]
+          Volume: *volume
+          Carrying Capacity: *volume
+          Effective Range: [{t: "{int:5:3000} m"}]
+          Magazine Size: [{t: "{int:1:300}"}]
+          Quantum Fuel Burn: [{t: "{float:1:200} per Km"}]
+          Max. Assist Distance: [{t: "{float:100:3000} M"}]
+          Damage Reduction: [{t: "{int:0:90}%"}]
+          Radiation Scrub Rate: [{w: 0.5, t: "{float:0:500:.1f} REM/s"}, {w: 0.5, t: "{int:1:300} REM/s"}]
+          Radiation Capacity: [{t: "{float:0:90000} mRem"}]
+          Radiation Dissipation: [{t: "{float:0:900} mRem/s"}]
+          Radiation Protection: [{t: "{int:0:90000} REM"}]
+          signed_pct: &signed_pct [{t: "{sign}{int:0:60}%"}]
+          Aim Time: *signed_pct
+          Spread: *signed_pct
+          Resistance: *signed_pct
+          Ammo Capacity: [{w: 0.6, t: "{float:0:5000}"}, {w: 0.4, t: "{int:0:5000}"}]
+          Shield HP: [{w: 0.6, t: "{float:0:5000}"}, {w: 0.4, t: "{int:0:5000}"}]
+          Regen Rate: [{w: 0.6, t: "{float:0:5000} /s"}, {w: 0.4, t: "{int:0:5000} /s"}]
+          Cooling Rate: [{w: 0.6, t: "{float:0:5000} /s"}, {w: 0.4, t: "{int:0:5000} /s"}]
+          Drive Speed: [{w: 0.6, t: "{float:0:5000} m/s"}, {w: 0.4, t: "{int:0:5000} m/s"}]
+          Spool Time: [{w: 0.6, t: "{float:0:5000} s"}, {w: 0.4, t: "{int:0:5000} s"}]
+          default: [{t: "{float:0:1000}"}]
+    - name: prefixed
+      w: 0.03
+      style: tooltip
+      text:
+        one_of:
+          - {w: 0.6, pick: prefixed}
+          - {w: 0.24, t: "{pick:prefixes}/{int:0:4}/{choice:A|B|C|D} {pick:cap_words}"}
+          - {w: 0.16, t: "{pick:prefixes}/{int:0:4}/{choice:A|B|C|D} {pick:cap_words} {pick:cap_words}"}
+    - name: tag                 # warehouse tooltip: material / amount / volume on a coloured box
+      w: 0.014
+      style: tag
+      text:
+        one_of:
+          - {w: 0.4, pick: commodities}
+          - {w: 0.3, t: "{int:1:999}"}
+          - {w: 0.1, t: "{float:0:5:.3f} {choice:SCU|cSCU|mSCU|µSCU}"}
+          - {w: 0.1, t: "{float:0:99} {choice:SCU|cSCU|mSCU|µSCU}"}
+          - {w: 0.1, t: "{int:1:500} {choice:SCU|cSCU|mSCU|µSCU}"}
+    - {name: dimcap, w: 0.006, style: dimcap, text: "Capacity: {float:0:99}{choice:mSCU|SCU|cSCU|µSCU}"}
+    - {name: de_name, w: 0.04, style: tooltip, text: {pick: de_names}}
+    - {name: de_desc, w: 0.06, style: tooltip, text: {pick: de_desc, wrap: [35, 55]}}
+    - {name: name, w: 0.09, style: tooltip, text: {pick: en_names}}
+    - {name: desc, w: 0.18, style: tooltip, text: {pick: en_desc, wrap: [35, 55]}}
+
+  # RGB, measured in real crops (white: the brightest 30 % of the ink at 1080p/1600p; red estimated)
+  colours:
+    white: [229, 224, 219]
+    green: [53, 223, 139]
+    red: [226, 74, 66]
+    amber: [235, 175, 55]
+    term_white: [234, 228, 232]
+    term_grey: [152, 150, 152]
+    term_orange: [222, 126, 60]
+    term_yellow: [173, 174, 82]
+    term_red: [229, 91, 57]
+    term_bar: [100, 92, 104]          # grey header bar ("// MATERIAL SPECIALIZATIONS")
+    term_red_bar: [150, 62, 52]       # red header bar ("// REFINERY SYSTEM")
+    tag_purple: [71, 52, 102]
+    tag_teal: [25, 95, 98]
+    tag_olive: [84, 100, 65]
+    dim_cap: [91, 103, 109]
+
+  fonts:
+    dir: fonts-sc/ttf
+    fallback: BlenderProMedium-Regular
+    caps_only: [Furore-Regular, BlenderProHeavy-Regular]     # their lower case is upper case: the label too
+    groups:
+      blender:                         # the game draws ~10 % narrower and slightly bolder than Pillow
+        hscale: [0.90, 0.97]
+        stroke: [0.012, 0.032]
+        fonts: [BlenderProMedium-Regular, BlenderProBook-Regular, BlenderProBold-Bold, BlenderProHeavy-Regular, BlenderProThin-Regular]
+      other:
+        hscale: [0.92, 1.04]
+        stroke: [0.0, 0.02]
+        fonts: [Aldrich-Regular, AudimatMono-Regular, AudimatMono-Bold, BarlowCondensed-Regular, BarlowCondensedSemiBold-Regular,
+                Capsuula-Regular, Electrolize-Regular, Furore-Regular, Jura-Medium, Michroma-Regular, OpenSans-Regular,
+                Orbitron-Light, Orbitron-Medium, Outfit-Regular, Outfit-Bold, Quantico-Regular, RalewayMedium-Regular,
+                TitilliumWeb-Regular, TitilliumWebSemiBold-Regular]
+
+  backgrounds:
+    tooltip-1080: {glob: ocr-train/bg/2503_*.jpg, flip: 0.5, jitter: {prob: 0.3, gain: [0.75, 1.3], offset: [-10, 10]}}
+    tooltip-1600: {glob: ocr-train/bg/8932_*.jpg, flip: 0.5, jitter: {prob: 0.3, gain: [0.75, 1.3], offset: [-10, 10]}}
+    terminal:
+      glob: ocr-train/bg-ref/*.jpg
+      jitter: {prob: 0.3, gain: [0.75, 1.3], offset: [-8, 8]}
+      build:
+        method: screen-tiles
+        images: ["screenshots/refinery flow/*.jpg", "screenshots/refinery flow 2/*.jpg", "screenshots/refinery flow 3/*.jpg"]
+        skip: ["22-41-13-D25", "22-41-18-130"]       # taken at an angle
+        size: [3840, 1600]
+        rect: [816, 168, 3036, 1428]                  # the terminal's screen
+        tile: [640, 320]
+
+  # Cap heights in px: 1080p recordings ~9.3, 3840×1600 ~12.9, plus a wide spread for 7–44 px high crops
+  styles:
+    tooltip:
+      fonts: &tooltip_fonts
+        - {font: BlenderProMedium-Regular, w: 0.68}
+        - {font: BlenderProBook-Regular, w: 0.10}
+        - {font: BlenderProBold-Bold, w: 0.06}
+        - {font: BlenderProHeavy-Regular, w: 0.01}
+        - {font: BlenderProThin-Regular, w: 0.01}
+        - {group: other, w: 0.14}
+      cap: &tooltip_cap [{w: 0.4, gauss: [9.3, 0.4]}, {w: 0.35, gauss: [12.9, 0.5]}, {w: 0.25, uniform: [4.3, 27.5]}]
+      colours: [{colour: white}]
+      dim: &dim {prob: 0.07, factor: [0.5, 0.85]}
+      background: &tooltip_bg [{bank: tooltip-1080, max_cap: 11.5}, {bank: tooltip-1600}]
+      neighbours: &tooltip_nb {prob: 0.5, colour: white, scale: [0.6, 1.02]}
+    term:
+      fonts:
+        - {font: BlenderProBook-Regular, w: 0.45, hscale: [0.95, 1.03], stroke: [0.01, 0.04]}   # the refinery's widths fit Book unstretched
+        - {font: BlenderProBold-Bold, w: 0.20}
+        - {font: BlenderProMedium-Regular, w: 0.20}
+        - {group: other, w: 0.15}
+      cap: [{w: 0.3, gauss: [9.3, 0.5]}, {w: 0.4, gauss: [13, 1.8]}, {w: 0.3, uniform: [4.3, 27.5]}]
+      colours: [{colour: term_white, w: 0.55}, {colour: term_grey, w: 0.20}, {colour: term_orange, w: 0.08},
+                {colour: term_yellow, w: 0.07}, {colour: term_red, w: 0.05}, {colour: term_white, scale: 0.6, w: 0.05}]
+      split: {prob: 0.12, colours: [term_orange, term_white]}     # "STATION PROFILE": the first word orange
+      dim: *dim
+      background: [{bank: terminal}]
+      bars: [{prob: 0.16, colour: term_bar, height: [0.3, 0.7], scale: [0.85, 1.15]},
+             {prob: 0.06, colour: term_red_bar, height: [0.3, 0.7], scale: [0.85, 1.15]}]
+      flat: {prob: 0.08, colour: [38, 34, 30], scale: [0.7, 1.3], noise: 2}
+      neighbours: {prob: 0.5, from: term, colour: term_white, scale: [0.6, 1.02]}
+    tag:
+      fonts: *tooltip_fonts
+      cap: *tooltip_cap
+      colours: [{colour: white}]
+      dim: *dim
+      background: *tooltip_bg
+      box: {colours: [tag_purple, tag_teal, tag_olive], scale: [0.85, 1.2], pad_x: [0.3, 0.8], pad_y: [0.35, 0.6]}
+    dimcap:
+      fonts: *tooltip_fonts
+      cap: *tooltip_cap
+      colours: [{colour: dim_cap}]
+      background: *tooltip_bg
+      neighbours: *tooltip_nb
+
+  render:
+    supersample: 4             # drawn unhinted at 4×, area-averaged down
+    min_cap: 4.0
+    track: [0.0, 0.035]        # extra letter spacing, in cap heights
+    pitch: [1.5, 1.65]         # line pitch of the neighbouring lines, in cap heights
+    opacity: [0.94, 1.0]
+    colour_jitter: [0.96, 1.04]
+    partial_neighbour: 0.3     # chance a neighbouring line is cut short
+    blur: {prob: 0.25, sigma: [0.3, 0.75]}
+    noise: {prob: 0.3, sigma: [1.5, 5]}
+    jpeg: {prob: 0.9, quality: [50, 95]}
+    triangles: {"▲": up, "▼": down}
+    box:                       # the crop like the text detector's box; margins in cap heights, measured on real crops
+      top: {gauss: [0.27, 0.08], clip: [0.0, 0.4]}
+      bottom: {gauss: [0.40, 0.07], clip: [0.15, 0.5], descender_extra: [0, 0.1]}
+      left: {gauss: [0.17, 0.08], clip: [0.0, 0.45]}
+      right: {gauss: [0.32, 0.1], clip: [0.05, 0.6]}
+      descender_chars: "gjpqy(),;[]{}|Qµ"
+
+train:
+  data:
+    - {path: "@synth"}
+    - {path: ocr-train/teacher, repeat: 10}   # 2525 real warehouse/refinery lines: without them it forgot those screens
+  epochs: 10
+  lr: 1.0e-4
+  weight_decay: 1.0e-4
+  batch: 128
+  workers: 4
+  train_bn: false
+  clip: 5.0
+  warmup: 0.5                  # epochs
+  select: last                 # the end of the cosine schedule
+  monitor:
+    - {set: gear, limit: 3000, seed: 123}
+    - {set: "@synth-val", limit: 2000}
+    - {set: teacher}
+
+eval:
+  headline: gear
+  baseline: true               # also measure the cut model before the fine-tune
+  normalize: {"μ": "µ"}
+  sets:
+    gear: {path: ocr-eval, group_by: source, subsets: {"&": "&"}}    # 21,881 real gear tooltip lines (labels: label.ts)
+    teacher: {path: ocr-eval-teacher}                                 # warehouse recording …6994 and the refinery test frames

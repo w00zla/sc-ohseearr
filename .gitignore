@@ -2,3 +2,5 @@
 # Local data: screenshots, recordings, extracted game files, training data (never in git)
 /local/
 /.claude/
+# Python bytecode (training/)
+__pycache__/

@@ -1,0 +1,53 @@
+# sc-warehouse-layout: NanoDet-Plus-m for the freight manager's warehouse view (badge, quality, tooltip title, lines).
+# Paths are relative to the data root (default <repo>/local). Data needed (never in git):
+#   detector/data       the COCO dataset: 480×320 windows of warehouse recordings (each frame scaled to 720 px height),
+#                       labelled by the read before this model, plus windows of other screens without labels
+#                       (made by sc-qm-companion's tools/dataset-export/warehouse_coco.py)
+#   detector/nanodet    the NanoDet checkout (training/README.md)
+id: sc-warehouse-layout
+family: nanodet
+
+package:
+  version: 1.0.0
+  license: MIT
+  description: "Layout detector for the freight manager's warehouse grid: count badges, quality texts, tooltip title and lines"
+  source: NanoDet-Plus-m (RangiLyu/nanodet, Apache-2.0) trained on warehouse recordings, {date} (sc-ohseearr {commit}, recipe {recipe})
+
+data: detector/data
+arch: nanodet-plus-m                 # training/layout/<arch>.yml
+input: {width: 480, height: 320}
+classes: [badge, quality, title, tipline]
+normalize:                           # BGR, 0-255 (model.toml gets them / 255)
+  mean: [103.53, 116.28, 123.675]
+  std: [57.375, 57.12, 58.395]
+
+train:
+  nanodet: detector/nanodet
+  epochs: 20                         # the model of 2026-10-31: the best of 20 epochs of a 40-epoch schedule (it had converged)
+  schedule_epochs: 40                # the cosine schedule's length
+  val_interval: 10
+  checkpoint: best                   # by the validation mAP at the val intervals (or: last)
+  batch: 32
+  workers: 4                         # NanoDet starts its workers anew every epoch (~1 min with 10 on Windows)
+  lr: 0.001
+  weight_decay: 0.05
+  warmup_steps: 300
+  seed: 1                            # 2026-11-06: seed 1 reproduced the 2026-10-31 model; an unseeded run varied (tipline precision 84 %)
+  augment:                           # no flipping (text); scaling for other resolutions and HUD sizes
+    perspective: 0.0
+    scale: [0.75, 1.3]
+    stretch: [[0.9, 1.1], [0.9, 1.1]]
+    rotation: 0
+    shear: 0
+    translate: 0.15
+    flip: 0.0
+    brightness: 0.2
+    contrast: [0.7, 1.3]
+    saturation: [0.6, 1.3]
+
+decode: {score: 0.35, nms: 0.5}
+
+eval: {split: val, iou: 0.5, threads: 3}
+
+# `shots`: frames scaled to this height, windows over this area (fractions x0, y0, x1, y1): the warehouse pane
+shots: {height: 720, area: [0.45, 0.25, 1.0, 0.95], overlap: 40}
