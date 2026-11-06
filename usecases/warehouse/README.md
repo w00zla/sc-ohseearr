@@ -41,12 +41,13 @@ cargo test -p sc-ohseearr-warehouse --release
 cargo clippy -p sc-ohseearr-warehouse --release --all-targets
 ```
 
-The screenshot test reads `screenshots/fe terminal 1` and `screenshots/inventory 2` below the data root
-(`SC_OHSEEARR_DATA`, else `<repo>/local`; 39 shots, ~2.5 s) and is skipped silently when they are absent.
+The screenshot test reads `screenshots/fe terminal 1` and `screenshots/inventory 2` below the
+[data root](../../README.md#data-root) (39 shots, ~2.5 s) and is skipped silently when they are absent.
 
 ## Regression
 
-`regression.toml` lists the data folders (relative to the data root). `examples/regress.rs` runs one
+`regression.toml` lists the data folders (relative to the data root). `examples/regress.rs` (`regress-warehouse`;
+`--threads` defaults to 3, as in the companion's dumps) runs one
 `WarehouseReader` over each folder's frames in order (`reset` per folder, diagnostics on, the cursor of a recording's
 `read-N.json`) and prints one JSON line per frame (`frame`, `cursor`, `output`, `diagnostics`; the timing to
 stderr). No expected outputs are kept in git: run it before and after a change (or an OCR/model change) and diff the

@@ -1,5 +1,5 @@
 # The data folders `examples/regress.rs` covers when it gets no folder arguments, relative to the data root
-# (`SC_OHSEEARR_DATA`, else `<repo>/local`). Debug recordings of the character inventory (frames with their
+# (README.md, "Data root"). Debug recordings of the character inventory (frames with their
 # cursor in `read-N.json`): 17 + 427 = 444 frames. No expected outputs are kept in git: record a baseline with
 # the previous build and compare (see README.md).
 folders = [

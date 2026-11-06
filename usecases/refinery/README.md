@@ -1,8 +1,7 @@
-# Refinery terminal
+# refinery
 
-Reads the refinery terminal's work order overview: the station and every work order panel shown side by side
-(running or completed) with its materials, qualities, yields and time remaining. Ported from the Quartermaster
-companion's `refinery.rs`; the algorithm is unchanged, only the labels differ (below).
+Use case card: the refinery terminal's reader. It reads the work order overview: the station and every work order
+panel shown side by side (running or completed) with its materials, qualities, yields and time remaining.
 
 | | |
 |---|---|
@@ -33,10 +32,10 @@ with only the English table, a player with a language pack is not matched. Give 
 
 ## Regression
 
-`examples/regress.rs` prints one JSON line per frame (folder, file, probe, output, diagnostics) over folders of
-screenshots or debug recordings; compare the lines before and after a change (no expected outputs are kept in
-git, the images stay local, ADR 0008). `regression.toml` lists the data folders, relative to the data root
-(`$SC_OHSEEARR_DATA`, else `<repo>/local`):
+`examples/regress.rs` (`regress-refinery`) prints one JSON line per frame (folder, file, probe, output,
+diagnostics) over folders of screenshots or debug recordings; compare the lines before and after a change (no
+expected outputs are kept in git, the images stay local, ADR 0008). `regression.toml` lists the data folders,
+relative to the [data root](../../README.md#data-root); `--threads` defaults to 3, as in the companion's dumps:
 
 ```sh
 cargo run --release -p sc-ohseearr-refinery --example regress-refinery -- --english <global.ini> [--pack <global.ini>] [--diagnostics] [--data <root>] [--threads n] [--gpu] [folder...]   # threads default 3

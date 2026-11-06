@@ -4,16 +4,8 @@ Guidance for Claude Code in this repository.
 
 ## Project
 
-`sc-ohseearr`: OCR for Star Citizen screens in Rust, extracted from the Quartermaster companion (2026-11-05/06):
-- `crates/core`: the engine (ONNX Runtime on CPU or DirectML; model families `DbDetector`, `CtcRecognizer`, `NanoDet`;
-  model packages with a `model.toml` manifest; `Ocr`; `group_lines`; typed `Error`).
-- `crates/sc`: the game layer (`Locale` from `global.ini`, `CenterUi`, parsers, the `ScreenReader` interface).
-- `crates/capture-win`: DXGI capture of any executable's window, cursor rest, change gate (Windows; stubs elsewhere).
-- `models/*`: model packages, each a folder and a crate (`package()` compiled in, `ModelPackage::load` at runtime).
-- `usecases/*`: screen readers `warehouse`, `gear-inventory`, `refinery`, each with `README.md` (the card),
-  `regression.toml` and `examples/regress.rs`.
-- `training/`: pipelines (rec, layout) and recipes producing model packages (uv/PyTorch).
-- `scripts/extract-global-ini.{ps1,sh}`: the game's English texts from `Data.p4k` via the StarBreaker CLI.
+`sc-ohseearr`: OCR for Star Citizen screens in Rust, extracted from the Quartermaster companion (2026-11-05/06). The
+crates, model packages, use cases and pipelines: README.md, "Layout"; each use case's card in `usecases/<name>/README.md`.
 
 Status: private on GitHub (w00zla/sc-ohseearr), public after the user's acceptance. Phases 1–5 of ADR 0004 are built; phase 6, the mining HUD
 reader as acceptance test (ADR 0009), is not. Every decision is an ADR in `docs/adr/`: read `docs/adr/README.md` before
@@ -52,5 +44,5 @@ cargo run --release -p sc-ohseearr-capture-win --example grab -- [exe] [out.png]
 scripts/extract-global-ini.ps1 -StarBreaker <starbreaker.exe> -P4k <Data.p4k> -Out <dir>   # or .sh; -> global-english-<version>.ini
 ```
 
-Data root for tests and `regress`: `$SC_OHSEEARR_DATA`, else `local/` (`local/screenshots/…`, `local/stock_scan_debug/…`).
+Data root for tests, `regress` and training: README.md, "Data root".
 Training: `training/README.md`.

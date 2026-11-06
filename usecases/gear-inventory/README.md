@@ -37,14 +37,15 @@ cargo test -p sc-ohseearr-gear-inventory --release
 cargo clippy -p sc-ohseearr-gear-inventory --release --all-targets
 ```
 
-The screenshot tests read `screenshots/inventory 3` and `screenshots/inventory 4` below the data root
-(`SC_OHSEEARR_DATA`, else `<repo>/local`) and are skipped silently when absent; run with `-- --nocapture` to see that
+The screenshot tests read `screenshots/inventory 3` and `screenshots/inventory 4` below the
+[data root](../../README.md#data-root) and are skipped silently when absent; run with `-- --nocapture` to see that
 they ran (each prints its read).
 
 ## Regression
 
 `regression.toml` lists the data folders (debug recordings of the character inventory, relative to the data root).
-`examples/regress.rs` prints one JSON line per frame (`frame`, `cursor`, `output`, `diagnostics`). No expected
+`examples/regress.rs` (`regress-gear-inventory`; `--threads` defaults to 3, as in the companion's dumps) prints one
+JSON line per frame (`frame`, `cursor`, `output`, `diagnostics`). No expected
 outputs are kept in git: run it before and after a change (or an OCR/model change) and diff the files.
 
 ```sh

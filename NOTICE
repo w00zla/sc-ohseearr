@@ -13,5 +13,6 @@ licenses, stated in each package's model.toml and MODEL.md:
 
 ONNX Runtime (Microsoft, MIT License) is linked statically through the `ort` crate.
 
-Star Citizen is a trademark of Cloud Imperium Rights LLC. This project is not affiliated with or endorsed by
-Cloud Imperium Games.
+sc-ohseearr is an unofficial Star Citizen fan project, not endorsed by or affiliated with the Cloud Imperium group of
+companies. Game content and materials are copyright Cloud Imperium Rights LLC and Cloud Imperium Rights Ltd. Star
+Citizen® is a registered trademark of Cloud Imperium Rights LLC. The repository contains no game data.

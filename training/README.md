@@ -9,7 +9,7 @@ Pipelines that turn a **recipe** (one YAML file per model) and local data into a
 | `training/layout` | `nanodet` | a screen's layout detector: NanoDet-Plus-m trained on a COCO dataset | `sc-warehouse-layout` |
 
 Data never goes into git: game fonts, screenshots, recordings, language files, crops and generated datasets stay
-in the data root (`local/`, gitignored). Only code and recipes are versioned.
+in the data root (README.md, ["Data root"](../README.md#data-root)). Only code and recipes are versioned.
 
 ```
 training/
@@ -60,6 +60,14 @@ taken from the player's own `Data.p4k` for local training only and never goes in
 `SC_GLOBAL_INI`, e.g. `<install>/LIVE/data/Localization/english/global.ini`) and a German pack
 (`local/localization/sc-deutsch/global.ini`).
 
+**Environment variables**:
+
+| Variable | Used by | What |
+|---|---|---|
+| `SC_OHSEEARR_DATA` | both pipelines (`--data-root` overrides it) | the data root; unset: `<repo>/local` |
+| `SC_GLOBAL_INI` | recipe `sc-rec-latin` (`synth.packs.en`) | the English `global.ini` the game uses |
+| `SC_DATA_P4K` | `scripts/extract-global-ini.{ps1,sh}` (`-P4k` overrides it) | the game's `Data.p4k`, for the English texts (and, by hand, the fonts) |
+
 ## Running
 
 ```sh
@@ -67,7 +75,7 @@ PY training/rec    training/recipes/sc-rec-latin.yml          # all steps; --ste
 PY training/layout training/recipes/sc-warehouse-layout.yml
 ```
 
-Common options: `--data-root <dir>` (default `$SC_OHSEEARR_DATA`, else `<repo>/local`), `--out <dir>` (default
+Common options: `--data-root <dir>` (default: the data root), `--out <dir>` (default
 `<data root>/training/<id>`), `--set key.sub=value` (override a recipe key, YAML value, e.g.
 `--set train.epochs=2`). The result is `<out>/package/`: copy `model.onnx` (and `dict.txt`, `model.toml`) into
 `models/<id>/` only after checking the metrics and the consumers' regression dumps (`CLAUDE.md`: results must not
@@ -83,7 +91,7 @@ change silently); paste `MODEL.metrics.md` into its `MODEL.md`.
 | `train` | the Hugging Face port (`PPOCRV6TinyRecForTextRecognition`, pinned revision) with its head cut like the ONNX, CTC, AdamW, cosine; monitored sets after every epoch | `train/last.pt`, `best.pt`, `log.json` |
 | `export` | ONNX opset 17, input `x` with named dynamic `batch`/`width`, softmax output, checked against PyTorch | `model.onnx` |
 | `eval` | every `eval.sets` entry on `model.onnx` (and on the cut model with `eval.baseline`) | `eval.json` |
-| `package` | | `package/` |
+| `package` | the package folder: the model, its manifest (input normalization, `[ctc]`), the dictionary, the eval metrics (with the baseline) and data sizes, their MODEL.md block | `package/` (`model.onnx`, `model.toml`, `dict.txt`, `metrics.json`, `MODEL.metrics.md`) |
 
 Tools on the same entry point: `PY training/rec eval <recipe> --model <onnx>` (measure any model; its `dict.txt`
 next to it), `teacher <recipe> --src <crops> --dest <dir> [--model <onnx>] [--min-score 0.95]` (label line crops
@@ -99,7 +107,7 @@ the renderer by eye).
 | `train` | NanoDet's `tools/train.py` in the checkout | `nanodet/` (checkpoints, logs, `model_best/`) |
 | `export` | NanoDet's `tools/export_onnx.py` (opset 11, onnxsim) from the best (or last) checkpoint | `model.onnx` |
 | `eval` | recall/precision per class at IoU `eval.iou` on the eval split, CPU time per window | `eval.json` |
-| `package` | | `package/` |
+| `package` | the package folder: the model, its manifest (input normalization, `[nanodet]` from the NanoDet config and the recipe's decoding), the eval metrics and data sizes, their MODEL.md block | `package/` (`model.onnx`, `model.toml`, `metrics.json`, `MODEL.metrics.md`) |
 
 Tools: `PY training/layout eval <recipe> --package <dir>`, `labels <recipe>` (windows with their labels),
 `errors <recipe> --package <dir>` (false hits red, misses white), `shots <recipe> --package <dir> <image>...`
@@ -120,7 +128,7 @@ Converters from one app's own recordings live with that app: Quartermaster's com
 `tools/dataset-export/` (`warehouse_coco.py`: warehouse recordings → COCO; `gear_lines.py`: gear tooltip dumps →
 line crops + `index.tsv`; `teacher_lines.py`: warehouse/refinery dumps of the cut model → teacher line sets;
 `tooltip_backgrounds.py`: tooltip areas → a background bank). The gear evaluation labels come from its
-`ocrtrain/label.ts` (Quartermaster's catalog and language pack: `index.tsv` → `labels.tsv`).
+`tools/dataset-export/ocr-eval-label.ts` (Quartermaster's catalog and language pack: `index.tsv` → `labels.tsv`).
 
 ## Recipe format
 

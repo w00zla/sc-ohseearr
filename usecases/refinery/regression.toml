@@ -1,5 +1,5 @@
 # The data folders the regression covers (examples/regress.rs), relative to the data root
-# ($SC_OHSEEARR_DATA, else <repo>/local). The images stay local (ADR 0008); no expected outputs are kept in git:
+# (README.md, "Data root"). The images stay local (ADR 0008); no expected outputs are kept in git:
 # compare the printed lines before and after a change.
 folders = [
     "screenshots/refinery flow",

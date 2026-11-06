@@ -17,6 +17,7 @@ any app that reads the game's UI.
 | `crates/core` | `sc-ohseearr-core` | engine: model families, model packages, `Ocr`, line grouping, image helpers |
 | `crates/sc` | `sc-ohseearr-sc` | the game: `Locale` (texts from `global.ini` by loc key, names → loc keys), `CenterUi`, value parsers, the `ScreenReader` interface |
 | `crates/capture-win` | `sc-ohseearr-capture-win` | live capture of a game window on Windows (DXGI), cursor rest, change gate |
+| `crates/test-support` | `sc-ohseearr-test-support` | dev-only (not published): the data root, arguments, frames and OCR the use cases' tests and `regress` examples share |
 | `models/*` | `sc-ohseearr-model-*` | model packages (below) |
 | `usecases/*` | `sc-ohseearr-<screen>` | screen readers with their cards and regression setup: `warehouse`, `gear-inventory`, `refinery` |
 | `training/` | — | training pipelines and recipes that produce model packages |
@@ -56,9 +57,9 @@ made, measurements) and a crate whose `package()` returns it compiled in. The sa
 
 | Package | Family | License | |
 |---|---|---|---|
-| `paddle-det-tiny` | `db-det` | Apache-2.0 | PP-OCRv6 tiny detector, unmodified |
-| `sc-rec-latin` | `ctc-rec` | Apache-2.0 | PP-OCRv6 tiny recognizer cut to Latin, fine-tuned on the game's font |
-| `sc-warehouse-layout` | `nanodet` | MIT | the freight manager's warehouse grid and tooltip |
+| [`paddle-det-tiny`](models/paddle-det-tiny/MODEL.md) | `db-det` | Apache-2.0 | PP-OCRv6 tiny detector, unmodified |
+| [`sc-rec-latin`](models/sc-rec-latin/MODEL.md) | `ctc-rec` | Apache-2.0 | PP-OCRv6 tiny recognizer cut to Latin, fine-tuned on the game's font |
+| [`sc-warehouse-layout`](models/sc-warehouse-layout/MODEL.md) | `nanodet` | MIT | the freight manager's warehouse grid and tooltip |
 
 ## Use
 
@@ -96,10 +97,23 @@ cargo run --release -p sc-ohseearr-warehouse --example regress-warehouse -- [fol
 cargo test --release --workspace
 ```
 
-Test and regression data (screenshots, recordings) are not in the repository: the tests and `regress` examples look in
-`$SC_OHSEEARR_DATA`, else `local/`, and skip what is missing.
+## Data root
+
+Test, regression and training data (screenshots, recordings, line crops, fonts) are not in the repository. Everything
+that reads them, the tests, the `regress` examples (`--data <root>`) and the training pipelines (`--data-root
+<dir>`), looks in the **data root**: `$SC_OHSEEARR_DATA`, else `local/` in the repository (gitignored). Below it:
+`screenshots/…`, `stock_scan_debug/…` (debug recordings), `training/<id>/` (training runs). Tests skip what is
+missing.
+
+## Game data and fan content
+
+This repository contains no game data: no screenshots, recordings, game texts or fonts. The readers take the game's
+texts from your own installation, the tests and training pipelines read your own local data.
+
+sc-ohseearr is an unofficial Star Citizen fan project, not endorsed by or affiliated with the Cloud Imperium group of
+companies. Game content and materials are copyright Cloud Imperium Rights LLC and Cloud Imperium Rights Ltd. Star
+Citizen® is a registered trademark of Cloud Imperium Rights LLC.
 
 ## License
 
-Code: MIT (`LICENSE`). Each model package states its own license; see `NOTICE`. Star Citizen is a trademark of
-Cloud Imperium Rights LLC; this project is not affiliated with Cloud Imperium Games.
+Code: MIT (`LICENSE`). Each model package states its own license; see `NOTICE`.
