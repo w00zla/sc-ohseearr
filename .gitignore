@@ -1,3 +1,4 @@
 /target/
 # Local data: screenshots, recordings, extracted game files, training data (never in git)
 /local/
+/.claude/

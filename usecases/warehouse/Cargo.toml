@@ -18,3 +18,5 @@ log = { workspace = true }
 sc-ohseearr-model-paddle-det-tiny = { path = "../../models/paddle-det-tiny" }
 sc-ohseearr-model-sc-rec-latin = { path = "../../models/sc-rec-latin" }
 image = { workspace = true, features = ["jpeg", "png"] }
+serde_json = "1"
+toml = { workspace = true }

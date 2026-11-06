@@ -1,0 +1,16 @@
+# The data folders `examples/regress.rs` covers when it gets no folder arguments, relative to the data root
+# (`SC_OHSEEARR_DATA`, else `<repo>/local`): the warehouse debug recordings (frames with their cursor in
+# `read-N.json`; 165 and 211 at 3840×1600, 276 at 1080p) and the screenshot folders (no cursor; 85 at 3840×1600 and
+# 3 tile crops): 740 frames, the selection of the companion's `inventory_dump` runs. No expected outputs are kept in
+# git (they hold the player's texts): record a baseline with the previous build and compare (see README.md).
+folders = [
+    "stock_scan_debug/qm-inventory-debug-1793396676",
+    "stock_scan_debug/qm-inventory-debug-1793396994",
+    "stock_scan_debug/qm-inventory-debug-1793448821",
+    "screenshots/inventory",
+    "screenshots/inventory/freight_elevator",
+    "screenshots/inventory/mats_labeled",
+    "screenshots/inventory 2",
+    "screenshots/inventory 3",
+    "screenshots/inventory 4",
+]
