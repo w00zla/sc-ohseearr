@@ -6,7 +6,7 @@ a `build` section:
 
 `screen-tiles`: the screen area `rect` of every screenshot of the given size; bright (text) and dark (text on bars)
 structures found by morphological top-hat/black-hat are inpainted, the result is cut into tiles. Banks built
-from other sources (e.g. tooltip areas around known text boxes) are written by a dataset exporter.
+from other sources (tooltip areas around known text boxes) are written by `training/tools/tooltip_backgrounds.py`.
 """
 import glob
 import os

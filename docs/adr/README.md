@@ -9,6 +9,7 @@
 | [0005](0005-model-packages-with-a-manifest.md) | Model packages with a manifest, compiled in or loaded | accepted | 2026-11-05 |
 | [0006](0006-neutral-reader-output.md) | Neutral reader output; the companion's readers move over completely | accepted | 2026-11-05 |
 | [0007](0007-game-texts-from-global-ini.md) | Game texts only from global.ini, no compiled-in texts | accepted | 2026-11-05 |
-| [0008](0008-training-produces-packages.md) | Training produces model packages through recipes; data stays local | accepted | 2026-11-05 |
+| [0008](0008-training-produces-packages.md) | Training produces model packages through recipes; data stays local | accepted (last bullet superseded by 0011) | 2026-11-05 |
 | [0009](0009-mining-hud-as-acceptance-test.md) | The mining HUD reader is the acceptance test | accepted | 2026-11-05 |
 | [0010](0010-screen-reader-interface.md) | The screen reader interface | accepted | 2026-11-06 |
+| [0011](0011-dataset-converters-without-python-in-the-app.md) | The app writes datasets from its recordings in Rust; tools over generic inputs live here | accepted | 2026-11-07 |

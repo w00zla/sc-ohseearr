@@ -1,6 +1,6 @@
 # 0008. Training produces model packages through recipes; data stays local
 
-- Status: accepted
+- Status: accepted; its last decision bullet superseded by [0011](0011-dataset-converters-without-python-in-the-app.md)
 - Date: 2026-11-05
 - Scope: `training/`, models, use cases
 

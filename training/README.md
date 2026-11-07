@@ -18,6 +18,7 @@ training/
   rec/                    cut, texts + render (synthetic lines), sheet, backgrounds, teacher, train, export, evaluate
   layout/                 nanodet-plus-m.yml (the architecture), evaluate, sheets (contact sheets)
   recipes/                <id>.yml per model
+  tools/                  dataset tools over generic inputs (box dumps, line indexes): teacher_lines, tooltip_backgrounds
 ```
 
 ## Setup
@@ -124,11 +125,16 @@ Tools: `PY training/layout eval <recipe> --package <dir>`, `labels <recipe>` (wi
   `train/` and `val/`, at the model's input size. Images without annotations are negatives.
 
 Labels come from a labelling tool, from an earlier read, or are proposed by an existing model (`rec teacher`).
-Converters from one app's own recordings live with that app: Quartermaster's companion has
-`tools/dataset-export/` (`warehouse_coco.py`: warehouse recordings → COCO; `gear_lines.py`: gear tooltip dumps →
-line crops + `index.tsv`; `teacher_lines.py`: warehouse/refinery dumps of the cut model → teacher line sets;
-`tooltip_backgrounds.py`: tooltip areas → a background bank). The gear evaluation labels come from its
-`tools/dataset-export/ocr-eval-label.ts` (Quartermaster's catalog and language pack: `index.tsv` → `labels.tsv`).
+Converters from one app's own recordings live with that app (ADR 0011): Quartermaster's companion writes the gear
+tooltip lines with `components_dump --dataset <dir>` (line crops + `index.tsv` with the boxes), and labels them with
+its `tools/dataset-export/ocr-eval-label.ts` (its catalog and language pack: `index.tsv` → `labels.tsv`). Tools
+over generic inputs are in `training/tools/` (paths from the data root, `--data-root` overrides it):
+
+- `teacher_lines.py`: box dumps of the cut model (`x y w h score text` per frame: the companion's `inventory_dump`
+  over warehouse recordings, `ocr_dump` over refinery screenshots) → the teacher line sets `ocr-train/teacher`,
+  `ocr-eval-teacher`.
+- `tooltip_backgrounds.py`: a line index with boxes (the gear `index.tsv`) and its frames → the tooltip background
+  bank `ocr-train/bg` (boxes inpainted).
 
 ## Recipe format
 
