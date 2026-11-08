@@ -2,7 +2,7 @@
 # Paths are relative to the data root (default <repo>/local). Data needed (never in git):
 #   detector/data       the COCO dataset: 480×320 windows of warehouse recordings (each frame scaled to 720 px height),
 #                       labelled by the read before this model, plus windows of other screens without labels
-#                       (made by sc-qm-companion's former tools/dataset-export/warehouse_coco.py, ADR 0011)
+#                       (made by the Quartermaster companion's former tools/dataset-export/warehouse_coco.py, ADR 0011)
 #   detector/nanodet    the NanoDet checkout (training/README.md)
 id: sc-warehouse-layout
 family: nanodet
