@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: ubuntu-22.04
+          - platform: ubuntu-24.04
             features: ""
           - platform: windows-latest
             features: --features sc-ohseearr-core/directml
@@ -41,7 +41,7 @@ jobs:
           shared-key: test-${{ matrix.platform }}
           # saved per pull request (its later pushes read it): no main run fills a shared one (ADR 0023)
       - name: cargo fmt
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-24.04'
         run: cargo fmt --all --check
       - name: cargo test
         run: cargo test --release --locked --workspace
@@ -49,7 +49,7 @@ jobs:
         run: cargo clippy --release --locked --workspace --all-targets ${{ matrix.features }} -- -D warnings
 
   shellcheck:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - name: shellcheck
