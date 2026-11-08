@@ -7,7 +7,7 @@
   <a href="https://github.com/w00zla/sc-ohseearr/releases"><img src="https://img.shields.io/github/v/release/w00zla/sc-ohseearr?color=54adf7" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-54adf7" alt="License: MIT"></a>
   <a href="Cargo.toml"><img src="https://img.shields.io/badge/rust-1.88%2B-54adf7?logo=rust" alt="Rust 1.88+"></a>
-  <img src="https://img.shields.io/badge/platform-Windows-54adf7" alt="Windows">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-54adf7" alt="Windows | Linux">
 </p>
 
 <p align="center">
@@ -21,7 +21,8 @@
 - **Readers:** the freight manager's warehouse, the character inventory and the refinery terminal, each one call
   per frame with neutral, typed output.
 - **The game's language:** texts come from the player's `global.ini` by loc key, so readers work with language packs.
-- **Capture:** a live grab of any game window on Windows, with the cursor, its rest and a change gate.
+- **Capture:** a live grab of any game window, with the cursor, its rest and a change gate (Windows; Linux is work in
+  progress).
 - **Training included:** one recipe per model turns local data into a model package; a new screen is a recipe and
   data, no engine code.
 
@@ -30,8 +31,9 @@
 ## Requirements
 
 - Rust 1.88+ (edition 2024, let chains) and git.
-- Windows 10/11 for the window capture and the GPU; the GPU needs Microsoft's redistributable `DirectML.dll` 1.15
-  next to the executable (Windows' own DirectML refuses the sessions). Other platforms: not tested.
+- Windows 10/11 or Linux. OCR and the readers run on both; the window capture is Windows only so far (Linux: work in
+  progress). The GPU (Windows) needs Microsoft's redistributable `DirectML.dll` 1.15
+  next to the executable (Windows' own DirectML refuses the sessions).
 - For readers that anchor on the game's texts (the refinery): the English `global.ini` of your game (see
   [The game's texts](#the-games-texts)) and/or the player's language pack.
 - For training: an NVIDIA GPU, Python 3.11 with uv and your own copy of the game ([`training/README.md`](training/README.md)).
