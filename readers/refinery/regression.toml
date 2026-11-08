@@ -1,5 +1,9 @@
 # The data folders the regression covers (examples/regress.rs), relative to the data root
-# (README.md, "Data root"; only `regression/refinery/`, ADR 0014): debug recordings of the refinery terminal. The
-# images stay local (ADR 0008); no expected outputs are kept in git: compare the printed lines before and after a
-# change. Empty until the in-game recordings of 2026-11 are added.
-folders = []
+# (README.md, "Data root"; only `regression/refinery/`, ADR 0014): debug recordings of the refinery terminal at
+# CRU-L1 on 2026-11-08 (28 frames at 3840×1600, 33 at 1920×1080: finished and running orders, a new order accepted
+# under "Work Order Accepted", the overview scrolled sideways). The images stay local (ADR 0008, 0015); no expected
+# outputs are kept in git: compare the printed lines before and after a change.
+folders = [
+    "regression/refinery/qm-inventory-debug-1794142372",
+    "regression/refinery/qm-inventory-debug-1794147615",
+]
