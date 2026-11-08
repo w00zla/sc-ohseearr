@@ -1,0 +1,45 @@
+name: Release
+
+# A tag v<version> on a commit of main, the version as in Cargo.toml's [workspace.package]: publishes a GitHub release
+# with the notes of docs/releases/<tag>.md. No assets: consumers depend on the tag (ADR 0001, 0023).
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Tag matches the version and is on main, notes exist
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -n 1)"
+          if [ "$tag" != "v$version" ]; then
+            echo "::error::Tag $tag does not match the version $version in Cargo.toml"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag $tag is not on main"
+            exit 1
+          fi
+          if [ ! -f "docs/releases/$tag.md" ]; then
+            echo "::error::docs/releases/$tag.md is missing"
+            exit 1
+          fi
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          gh release create "$tag" --title "sc-ohseearr $tag" --verify-tag --notes-file "docs/releases/$tag.md"
