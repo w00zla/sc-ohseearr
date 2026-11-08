@@ -16,4 +16,5 @@
 | [0012](0012-apps-provide-the-english-table.md) | Each app decides how it provides the English table | accepted | 2026-11-08 |
 | [0013](0013-readers-instead-of-use-cases-and-screen-readers.md) | "Reader" as the one term: `readers/` and the `Reader` trait | accepted | 2026-11-08 |
 | [0014](0014-regression-data-only-from-regression-folders.md) | Regression data only from `regression/<reader>/`; screenshots are scratch | accepted | 2026-11-08 |
-| [0015](0015-small-game-data-excerpts-in-git.md) | Small game-data excerpts may go into git; the rest is exported by a script | accepted | 2026-11-08 |
+| [0015](0015-small-game-data-excerpts-in-git.md) | Small game-data excerpts may go into git; the rest is exported by a script | accepted (translation fetching superseded by 0016) | 2026-11-08 |
+| [0016](0016-translations-are-fetched-by-the-user.md) | Translation files are the user's to get; the script exports only the English table | accepted | 2026-11-08 |

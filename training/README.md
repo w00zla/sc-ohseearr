@@ -10,8 +10,9 @@ Pipelines that turn a **recipe** (one YAML file per model) and local data into a
 
 Training data stays in the data root (README.md, ["Data root"](../README.md#data-root)): game fonts, screenshots,
 recordings, language files and generated datasets are whole files, which never go into git (ADR 0015: only small
-excerpts a test needs). Code and recipes are versioned; an export script for the game-derived inputs is planned
-(ADR 0015), until then they are placed by hand as below.
+excerpts a test needs). Code and recipes are versioned; the English `global.ini` comes from
+`scripts/extract-global-ini.{ps1,sh}` (starbreaker-ps), the fonts and a translation are placed by hand as below
+(ADR 0016).
 
 ```
 training/
@@ -60,9 +61,18 @@ under a third party's licence, ADR 0015). The fonts in
    kerning, and writes one TTF per font with fontTools). The files are named `<Family>-<Style>.ttf`, e.g.
    `BlenderProMedium-Regular.ttf`, the names the recipe uses.
 
-**Language files**: the recipe `sc-rec-latin` reads the English `global.ini` the game uses (set
-`SC_GLOBAL_INI`, e.g. `<install>/LIVE/data/Localization/english/global.ini`) and a German pack
-(`local/localization/sc-deutsch/global.ini`).
+**Language files**: the recipe `sc-rec-latin` reads the English `global.ini` and a German translation; it renders
+synthetic lines from their item names, descriptions, commodity names and refinery texts (`synth.corpora`), so the
+recognizer also knows the words and characters (umlauts, ß) of German players. Neither file is in the repository
+(ADR 0015, 0016); get them yourself:
+
+- **English**: the game keeps it inside `Data.p4k`. `scripts/extract-global-ini.{ps1,sh}` exports it with
+  starbreaker-ps (`global-english-<version>.ini`); a language pack that replaces the English texts (e.g. one
+  installed at `<install>/LIVE/data/Localization/english/global.ini`) works too. Point `SC_GLOBAL_INI` at it.
+- **German**: any complete translation `global.ini`, e.g. the community project
+  [StarCitizen-Deutsch-INI](https://github.com/rjcncpt/StarCitizen-Deutsch-INI) (its `live/global.ini`; mind its
+  licence, CC BY-NC-SA 4.0). Put it at `local/localization/sc-deutsch/global.ini` (`synth.packs.de`, or
+  `--set synth.packs.de=<path>`).
 
 **Environment variables**:
 
