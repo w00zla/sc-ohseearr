@@ -26,7 +26,7 @@
 - **Training included:** one recipe per model turns local data into a model package; a new screen is a recipe and
   data, no engine code.
 
-> **Status:** early, APIs change until 1.0.
+> **Status:** early, APIs change until 1.0. Linux: OCR and the readers run, the window capture is work in progress.
 
 ## Requirements
 
