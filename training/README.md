@@ -13,7 +13,7 @@ recordings, language files and generated datasets are whole files, which never g
 excerpts a test needs). The screenshots and recordings a recipe or tool reads lie in `sources/`, not in the scratch
 folders `screenshots/` and `stock_scan_debug/`. Code and recipes are versioned; the English `global.ini` comes from
 any tool that extracts it from `Data.p4k` (our `scripts/extract-global-ini.{ps1,sh}` with StarBreaker), the fonts
-and a translation are placed by hand as below.
+from `Data.p4k` too (`scripts/extract-fonts.{ps1,sh}`), a translation you place by hand as below.
 
 ```
 training/
@@ -51,16 +51,18 @@ and two patches for torch 2: `nanodet/data/collate.py`: `string_classes = (str,)
 
 **Fonts** (recognizers drawing the game's UI). Star Citizen draws its UI in Blender Pro, a commercial font: it is
 taken from the player's own `Data.p4k` for local training only and never goes into git or a build (a whole file
-under a third party's licence). The fonts in
-`local/fonts-sc/ttf/` were made like this:
+under a third party's licence). One script makes them, into `<data root>/fonts-sc/ttf/` (`synth.fonts.dir`):
 
-1. Extract the Scaleform font library `Data/UI/fonts/Shared/fonts_en.swf` (29 fonts; `FontConfig.xml` next to it
-   maps them to the UI's font names) from `Data.p4k`, e.g. with StarBreaker:
-   `starbreaker p4k extract --p4k <install>/LIVE/Data.p4k --filter "Data/UI/fonts/Shared/*" -o local/fonts-sc/p4k`.
-2. Convert its `DefineFont3` tags to TrueType: `local/fonts-sc/swf2ttf.py <fonts_en.swf> local/fonts-sc/ttf`
-   (a local script, not in git: it reads the glyph shapes (EM 20480, scaled to 2048 units per em), advances and
-   kerning, and writes one TTF per font with fontTools). The files are named `<Family>-<Style>.ttf`, e.g.
-   `BlenderProMedium-Regular.ttf`, the names the recipe uses.
+```sh
+scripts/extract-fonts.ps1 -StarBreaker <starbreaker.exe> [-P4k <install>/LIVE/Data.p4k] [-Out <dir>] [-Python <venv python>]
+scripts/extract-fonts.sh <starbreaker> [Data.p4k] [out dir] [python]          # Linux
+```
+
+It extracts the Scaleform font library `Data/UI/fonts/Shared/fonts_en.swf` (29 fonts) with StarBreaker (upstream or
+a fork like starbreaker-ps; `Data.p4k` from `-P4k`, else `SC_DATA_P4K`) and converts its `DefineFont3` tags to
+TrueType with `training/tools/swf2ttf.py <fonts_en.swf> <out dir>` (the venv's Python): the glyph shapes (EM 20480,
+scaled to 2048 units per em), advances and kerning, one TTF per font, named `<Family>-<Style>.ttf`, e.g.
+`BlenderProMedium-Regular.ttf`, the names the recipe uses. Run it again after a patch that changes the fonts.
 
 **Language files**: the recipe `sc-rec-latin` reads the English `global.ini` and a German translation; it renders
 synthetic lines from their item names, descriptions, commodity names and refinery texts (`synth.corpora`), so the
@@ -82,7 +84,7 @@ get them yourself:
 |---|---|---|
 | `SC_OHSEEARR_DATA` | both pipelines (`--data-root` overrides it) | the data root; unset: `<repo>/local` |
 | `SC_GLOBAL_INI` | recipe `sc-rec-latin` (`synth.packs.en`) | the English `global.ini` the game uses |
-| `SC_DATA_P4K` | `scripts/extract-global-ini.{ps1,sh}` (`-P4k` overrides it) | the game's `Data.p4k`, for the English texts (and, by hand, the fonts) |
+| `SC_DATA_P4K` | `scripts/extract-global-ini.{ps1,sh}`, `scripts/extract-fonts.{ps1,sh}` (`-P4k` overrides it) | the game's `Data.p4k`, for the English texts and the fonts |
 
 ## Running
 

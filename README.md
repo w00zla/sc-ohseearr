@@ -137,7 +137,7 @@ loop {
 | `models/*` | `sc-ohseearr-model-*` | model packages, each also a crate |
 | `readers/*` | `sc-ohseearr-<reader>` | one reader each, with its card and regression setup |
 | `training/` | — | the pipelines and recipes that make model packages (Python) |
-| `scripts/` | — | `extract-global-ini.{ps1,sh}`: the game's English texts from `Data.p4k` |
+| `scripts/` | — | `extract-global-ini.{ps1,sh}`: the game's English texts from `Data.p4k`; `extract-fonts.{ps1,sh}`: the game's UI fonts for training |
 
 A new screen is a new folder in `readers/` (and maybe in `models/`), not a change to `core` or `sc`.
 

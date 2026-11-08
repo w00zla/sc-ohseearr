@@ -25,7 +25,7 @@ here that could move results.
   a test reads, a few records, single crops; a file up to ~1 MB, a set a few MB), with its source noted. The readers'
   test frames live in the separate repository sc-ohseearr-fixtures, the submodule `fixtures/` (ADR 0021).
   Never whole files: no `global.ini`, fonts (Blender Pro is commercial), `Data.p4k` extracts, complete recordings or
-  datasets; the English `global.ini` comes from `Data.p4k` with any extracting tool (`scripts/extract-global-ini.*`: StarBreaker), fonts and
+  datasets; the English `global.ini` comes from `Data.p4k` with any extracting tool (`scripts/extract-global-ini.*`: StarBreaker), the fonts with `scripts/extract-fonts.*`,
   translations users get themselves (`training/README.md`, ADR 0016). Local data lives
   in `local/` (gitignored: screenshots, recordings, training data, the venv with the NanoDet checkout). Model weights
   trained on such data are fine (ADR 0002).
@@ -52,6 +52,7 @@ cargo run --release --example layout_dump -- <image> [x y w h] [--layout <dir>]
 cargo run --release -p sc-ohseearr-<reader> --example regress-<reader> -- [folders] [--data <root>] [--threads n (3)] [--gpu]   # reader: warehouse, gear-inventory, refinery (needs --english <global.ini> and/or --pack <ini>)
 cargo run --release -p sc-ohseearr-capture-win --example grab -- [exe] [out.png] [delay_s]
 scripts/extract-global-ini.ps1 -StarBreaker <starbreaker.exe> -P4k <Data.p4k> -Out <dir>   # or .sh; -> global-english-<version>.ini
+scripts/extract-fonts.ps1 -StarBreaker <starbreaker.exe> [-P4k <Data.p4k>]                 # or .sh; -> <data root>/fonts-sc/ttf (via training/tools/swf2ttf.py)
 ```
 
 Data root for tests, `regress` and training: README.md, "Data root".
