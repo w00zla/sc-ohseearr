@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  OCR for Star Citizen in Rust: read what the game shows, from a frame of its window, as typed values. An engine on
+  OCR-framework for Star Citizen: read what the game shows, from a frame of its window, as typed values. An engine on
   ONNX Runtime, models tuned to the game's UI, ready readers for real screens and the pipelines that train the
   models. It started as the OCR core of the Quartermaster companion app.
 </p>
@@ -31,12 +31,12 @@
 ## Requirements
 
 - Rust 1.88+ (edition 2024, let chains) and git.
-- Windows 10/11 or Linux. OCR and the readers run on both; the window capture is Windows only so far (Linux: work in
-  progress). The GPU (Windows) needs Microsoft's redistributable `DirectML.dll` 1.15
-  next to the executable (Windows' own DirectML refuses the sessions).
-- For readers that anchor on the game's texts (the refinery): the English `global.ini` of your game (see
-  [The game's texts](#the-games-texts)) and/or the player's language pack.
-- For training: an NVIDIA GPU, Python 3.11 with uv and your own copy of the game ([`training/README.md`](training/README.md)).
+- Windows 10/11 or Linux. OCR and the readers run on both; the game-window capture is Windows only so far.
+- GPU acceleration under Windows needs Microsoft's redistributable `DirectML.dll` 1.15
+  next to the executable.
+- For readers that anchor on the game's texts (i.e. the refinery): the `global.ini` of your game and/or a translated ini-file (see
+  [The game's texts](#the-games-texts)).
+- For training: an NVIDIA GPU, Python 3.11 with [uv](https://docs.astral.sh/uv/) and your own copy of the game's `Data.p4k` file (see [training/README.md](training/README.md)).
 
 ## Use
 
@@ -45,17 +45,17 @@ A git dependency (no crates.io), pinned by a release tag or a revision. Every cr
 ```toml
 [dependencies]
 # The engine and the models
-sc-ohseearr-core = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }  # features = ["directml"] for the GPU
-sc-ohseearr-model-paddle-det-tiny = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
-sc-ohseearr-model-sc-rec-latin = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
-sc-ohseearr-model-sc-warehouse-layout = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+sc-ohseearr-core = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.1.0" }  # features = ["directml"] for the GPU
+sc-ohseearr-model-paddle-det-tiny = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.1.0" }
+sc-ohseearr-model-sc-rec-latin = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.1.0" }
+sc-ohseearr-model-sc-warehouse-layout = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.1.0" }
 # The game: texts, parsers, the reader interface; the readers
-sc-ohseearr-sc = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
-sc-ohseearr-warehouse = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
-sc-ohseearr-gear-inventory = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
-sc-ohseearr-refinery = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+sc-ohseearr-sc = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.1.0" }
+sc-ohseearr-warehouse = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.1.0" }
+sc-ohseearr-gear-inventory = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.1.0" }
+sc-ohseearr-refinery = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.1.0" }
 # The window capture (Windows)
-sc-ohseearr-capture-win = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+sc-ohseearr-capture-win = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.1.0" }
 ```
 
 The engine alone, the text lines of an image:
@@ -129,15 +129,9 @@ loop {
 
 ## How it works
 
-| Layer | Crate | What |
-|---|---|---|
-| `crates/core` | `sc-ohseearr-core` | the engine: model families, model packages, `Ocr`, line grouping, image helpers; nothing about the game |
-| `crates/sc` | `sc-ohseearr-sc` | the game, any screen: `Locale` (texts by loc key, names → loc keys), `CenterUi`, value parsers, the `Reader` interface |
-| `crates/capture-win` | `sc-ohseearr-capture-win` | live capture of a game window on Windows (DXGI), cursor rest, change gate |
-| `models/*` | `sc-ohseearr-model-*` | model packages, each also a crate |
-| `readers/*` | `sc-ohseearr-<reader>` | one reader each, with its card and regression setup |
-| `training/` | — | the pipelines and recipes that make model packages (Python) |
-| `scripts/` | — | `extract-global-ini.{ps1,sh}`: the game's English texts from `Data.p4k`; `extract-fonts.{ps1,sh}`: the game's UI fonts for training |
+<p align="center"><a href="docs/assets/arch-overview.png"><img src="docs/assets/arch-overview.png" alt="A frame of the game window goes through the readers, which use the game layer (texts, the reader interface) and the engine with its model packages, and come back as typed values; training turns local data into model packages" width="600"></a></p>
+
+The details, from a frame through a read to the training of a model: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 A new screen is a new folder in `readers/` (and maybe in `models/`), not a change to `core` or `sc`.
 
@@ -180,8 +174,7 @@ app's business.
 
 ### The game's texts
 
-Readers carry no game text. They anchor on loc keys and take the texts from the frame's `Locale`: the player's
-language pack (`data/Localization/<language>/global.ini`, picked by `user.cfg`) and the game's English table. The
+Readers carry no game text. They anchor on loc keys and take the texts from the frame's `Locale`: game's English table and optionally the player's language pack (`data/Localization/<language>/global.ini`). The
 English table lives inside `Data.p4k` as `Data/Localization/english/global.ini`; any tool that extracts files from
 `Data.p4k` gets it (there are several). `scripts/extract-global-ini.{ps1,sh}` does it with StarBreaker and names the
 file by the game build:
@@ -190,11 +183,14 @@ file by the game build:
 scripts/extract-global-ini.ps1 -StarBreaker <starbreaker.exe> -P4k <install>/LIVE/Data.p4k -Out <dir>   # Linux: scripts/extract-global-ini.sh
 ```
 
-## Development
+## Develop
 
 ```sh
-git submodule update --init                       # the readers' test frames (fixtures/)
+git clone --recurse-submodules https://github.com/w00zla/sc-ohseearr   # with the readers' test frames (fixtures/)
+git submodule update --init                       # in an existing clone
 cargo test --release --workspace
+cargo clippy --release --workspace --all-targets
+cargo fmt --all
 cargo run --release --example ocr_dump -- <image> [max_height] [threads] [--det <dir>] [--rec <dir>] [--gpu]
 cargo run --release --example layout_dump -- <image> [x y w h]
 cargo run --release -p sc-ohseearr-refinery --example regress-refinery -- --english <global.ini>   # likewise regress-warehouse, regress-gear-inventory
@@ -207,6 +203,9 @@ cargo run --release -p sc-ohseearr-refinery --example regress-refinery -- --engl
 - Each reader's `regress` example prints its output per frame over its regression set: compare the lines before and
   after a change. Results must not change silently.
 - Training: [`training/README.md`](training/README.md) (setup, the fonts and language files you provide, recipes).
+- Changes land on `main` through pull requests; every pull request runs formatting, the tests and clippy on Linux
+  and Windows, and shellcheck. New test frames go to
+  [sc-ohseearr-fixtures](https://github.com/w00zla/sc-ohseearr-fixtures) (its README says how).
 
 **Data root.** Local data stays out of git: `$SC_OHSEEARR_DATA`, else `local/` in the checkout (gitignored). The
 `regress` examples (`--data <root>`) and the training pipelines (`--data-root <dir>`) read from it:
@@ -233,7 +232,8 @@ Citizen® is a registered trademark of Cloud Imperium Rights LLC.
 
 [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) (PP-OCRv6 detector and recognizer),
 [NanoDet](https://github.com/RangiLyu/nanodet) (NanoDet-Plus), [ONNX Runtime](https://onnxruntime.ai/) through
-[`ort`](https://github.com/pykeio/ort), [StarBreaker](https://github.com/diogotr7/StarBreaker) for reading `Data.p4k`.
+[`ort`](https://github.com/pykeio/ort), [StarBreaker](https://github.com/diogotr7/StarBreaker) for reading `Data.p4k`,
+[fontTools](https://github.com/fonttools/fonttools) for converting the game's fonts.
 
 ## License
 

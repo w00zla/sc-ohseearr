@@ -1,0 +1,57 @@
+name: Tests
+
+# Every pull request (and by hand): formatting, the Rust tests (the readers' on the test frames of the submodule
+# fixtures/) and clippy on Linux and Windows, shellcheck for the shell scripts. The ruleset on main requires these
+# checks; main changes only through pull requests, so a run after the merge would test the same code twice (ADR 0023).
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  rust:
+    name: rust (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-24.04
+            features: ""
+          - platform: windows-latest
+            features: --features sc-ohseearr-core/directml
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: swatinem/rust-cache@v2
+        with:
+          shared-key: test-${{ matrix.platform }}
+          # saved per pull request (its later pushes read it): no main run fills a shared one (ADR 0023)
+      - name: cargo fmt
+        if: matrix.platform == 'ubuntu-24.04'
+        run: cargo fmt --all --check
+      - name: cargo test
+        run: cargo test --release --locked --workspace
+      - name: cargo clippy
+        run: cargo clippy --release --locked --workspace --all-targets ${{ matrix.features }} -- -D warnings
+
+  shellcheck:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: shellcheck
+        run: shellcheck scripts/*.sh

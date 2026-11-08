@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 690" width="1000" height="690">
+  <!-- Source of docs/assets/arch-overview.png (resvg, then oxipng). Layers and data flow: the game window through capture-win and the app into the readers, sc and core, fed by model packages that the training lane makes. -->
+  <style>
+    text { font-family: "Segoe UI", "DejaVu Sans", sans-serif; fill: #ffffff; }
+    .title { font-size: 15px; font-weight: 600; }
+    .sub { font-size: 12.5px; fill: #add3eb; }
+    .mono { font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 12.5px; fill: #4ee0ff; }
+    .label { font-size: 12px; fill: #add3eb; }
+    .faint { font-size: 12px; fill: #7f9db1; }
+    .box { fill: #143a52; }
+    .core { fill: #194967; stroke: #54adf7; stroke-width: 1.5; }
+    .ext { fill: #143a52; stroke: #1ca2b2; stroke-width: 1.2; stroke-dasharray: 5 4; }
+    .file { fill: #0a1d29; stroke: #1e4a66; stroke-width: 1; }
+    .group { fill: none; stroke: #1e4a66; stroke-width: 1.2; }
+    .edge { stroke: #7f9db1; stroke-width: 1.4; fill: none; }
+    .flow { stroke: #54adf7; stroke-width: 2; fill: none; }
+    .ctrl { stroke: #4ee0ff; stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#54adf7"/></marker>
+    <marker id="ahl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#4ee0ff"/></marker>
+    <marker id="ahm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#7f9db1"/></marker>
+  </defs>
+  <rect width="1000" height="690" rx="10" fill="#0f2c3e"/>
+
+  <!-- Row A: game window, capture, app -->
+  <rect class="ext" x="24" y="20" width="170" height="68" rx="6"/>
+  <text class="title" x="109" y="48" text-anchor="middle">Game window</text>
+  <text class="faint" x="109" y="68" text-anchor="middle">Star Citizen</text>
+  <rect class="core" x="244" y="20" width="210" height="68" rx="8"/>
+  <text class="title" x="349" y="48" text-anchor="middle">capture-win</text>
+  <text class="sub" x="349" y="68" text-anchor="middle">frame + cursor</text>
+  <rect class="box" x="504" y="20" width="472" height="68" rx="8"/>
+  <text class="title" x="740" y="48" text-anchor="middle">app</text>
+  <text class="sub" x="740" y="68" text-anchor="middle">decides which screen is visible · makes every engine</text>
+  <path class="flow" d="M194 54 H236" marker-end="url(#ah)"/>
+  <path class="flow" d="M454 54 H496" marker-end="url(#ah)"/>
+
+  <!-- Row B: readers -->
+  <rect class="group" x="14" y="130" width="972" height="92" rx="8"/>
+  <text class="faint" x="26" y="148">readers/*  ·  one per screen</text>
+  <rect class="core" x="24" y="156" width="300" height="56" rx="6"/>
+  <text class="title" x="174" y="177" text-anchor="middle">warehouse</text>
+  <text class="sub" x="174" y="196" text-anchor="middle">learned layout</text>
+  <rect class="core" x="350" y="156" width="300" height="56" rx="6"/>
+  <text class="title" x="500" y="177" text-anchor="middle">gear-inventory</text>
+  <text class="sub" x="500" y="196" text-anchor="middle">calibrated geometry</text>
+  <rect class="core" x="676" y="156" width="300" height="56" rx="6"/>
+  <text class="title" x="826" y="177" text-anchor="middle">refinery</text>
+  <text class="sub" x="826" y="196" text-anchor="middle">text anchors by loc key</text>
+  <path class="flow" d="M640 88 V130" marker-end="url(#ah)"/>
+  <text class="label" x="648" y="116">Frame → probe, read</text>
+  <path class="flow" d="M940 130 V88" marker-end="url(#ah)"/>
+  <text class="label" x="932" y="116" text-anchor="end">typed output</text>
+
+  <!-- Row C: sc and the texts -->
+  <rect class="core" x="24" y="272" width="400" height="68" rx="8"/>
+  <text class="title" x="224" y="300" text-anchor="middle">sc  ·  the game, no screen</text>
+  <text class="sub" x="224" y="320" text-anchor="middle">Reader · Frame · Field · Name · parsers</text>
+  <rect class="core" x="454" y="272" width="250" height="68" rx="8"/>
+  <text class="title" x="579" y="300" text-anchor="middle">Locale</text>
+  <text class="sub" x="579" y="320" text-anchor="middle">loc key ↔ text</text>
+  <rect class="file" x="744" y="272" width="232" height="68" rx="4"/>
+  <text class="mono" x="860" y="298" text-anchor="middle">global.ini</text>
+  <text class="faint" x="860" y="318" text-anchor="middle">language pack + English</text>
+  <path class="edge" d="M744 306 H712" marker-end="url(#ahm)"/>
+  <path class="ctrl" d="M224 222 V264" marker-end="url(#ahl)"/>
+  <text class="label" x="234" y="250">built on</text>
+  <path class="ctrl" d="M826 222 V242 H640 V264" fill="none" marker-end="url(#ahl)"/>
+  <text class="label" x="660" y="236">anchors by key</text>
+
+  <!-- Row D: core -->
+  <rect class="group" x="14" y="372" width="972" height="96" rx="8"/>
+  <text class="faint" x="26" y="390">core  ·  the engine, nothing about the game</text>
+  <rect class="core" x="24" y="398" width="300" height="60" rx="6"/>
+  <text class="title" x="174" y="420" text-anchor="middle">Ocr</text>
+  <text class="mono" x="174" y="441" text-anchor="middle">DbDetector + CtcRecognizer</text>
+  <rect class="core" x="350" y="398" width="200" height="60" rx="6"/>
+  <text class="title" x="450" y="420" text-anchor="middle">NanoDet</text>
+  <text class="sub" x="450" y="441" text-anchor="middle">layout by class</text>
+  <rect class="ext" x="576" y="398" width="200" height="60" rx="6"/>
+  <text class="title" x="676" y="420" text-anchor="middle">ONNX Runtime</text>
+  <text class="sub" x="676" y="441" text-anchor="middle">CPU or DirectML</text>
+  <rect class="box" x="802" y="398" width="174" height="60" rx="6"/>
+  <text class="title" x="889" y="420" text-anchor="middle">ModelPackage</text>
+  <text class="sub" x="889" y="441" text-anchor="middle">manifest + weights</text>
+  <path class="ctrl" d="M224 340 V372" marker-end="url(#ahl)"/>
+  <text class="label" x="234" y="360">uses</text>
+
+  <!-- Row E: model packages -->
+  <text class="faint" x="24" y="520">embedded: package()</text>
+  <text class="faint" x="24" y="540">or loaded: ModelPackage::load(dir)</text>
+  <rect class="group" x="410" y="496" width="576" height="94" rx="8"/>
+  <text class="faint" x="422" y="514">models/*  ·  packages that are also crates</text>
+  <rect class="box" x="420" y="522" width="176" height="56" rx="6"/>
+  <text class="mono" x="508" y="544" text-anchor="middle">paddle-det-tiny</text>
+  <text class="faint" x="508" y="563" text-anchor="middle">db-det</text>
+  <rect class="box" x="610" y="522" width="176" height="56" rx="6"/>
+  <text class="mono" x="698" y="544" text-anchor="middle">sc-rec-latin</text>
+  <text class="faint" x="698" y="563" text-anchor="middle">ctc-rec</text>
+  <rect class="box" x="800" y="522" width="176" height="56" rx="6"/>
+  <text class="mono" x="888" y="544" text-anchor="middle">sc-warehouse-layout</text>
+  <text class="faint" x="888" y="563" text-anchor="middle">nanodet</text>
+  <path class="flow" d="M889 496 V468" marker-end="url(#ah)"/>
+  <text class="label" x="899" y="486">weights</text>
+
+  <!-- Row F: training lane -->
+  <text class="faint" x="24" y="622">training lane  ·  offline, on your own copy of the game</text>
+  <rect class="file" x="24" y="634" width="140" height="44" rx="4"/>
+  <text class="mono" x="94" y="661" text-anchor="middle">Data.p4k</text>
+  <rect class="box" x="196" y="634" width="200" height="44" rx="6"/>
+  <text class="title" x="296" y="661" text-anchor="middle">scripts/</text>
+  <rect class="file" x="428" y="634" width="170" height="44" rx="4"/>
+  <text class="mono" x="513" y="661" text-anchor="middle">local data</text>
+  <rect class="core" x="630" y="634" width="346" height="44" rx="6"/>
+  <text class="title" x="803" y="661" text-anchor="middle">training/  ·  recipe → package</text>
+  <path class="flow" d="M164 656 H188" marker-end="url(#ah)"/>
+  <path class="flow" d="M396 656 H420" marker-end="url(#ah)"/>
+  <path class="flow" d="M598 656 H622" marker-end="url(#ah)"/>
+  <path class="flow" d="M840 634 V590" marker-end="url(#ah)"/>
+</svg>

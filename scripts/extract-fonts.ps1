@@ -14,7 +14,7 @@ starbreaker-ps (https://github.com/w00zla/starbreaker-ps), and the training venv
 (training/README.md).
 
 .EXAMPLE
-./scripts/extract-fonts.ps1 -StarBreaker C:\tools\starbreaker.exe -P4k "F:\Games\StarCitizen\LIVE\Data.p4k"
+./scripts/extract-fonts.ps1 -StarBreaker C:\tools\starbreaker.exe -P4k "<install>\StarCitizen\LIVE\Data.p4k"
 #>
 param(
     [Parameter(Mandatory)] [string] $StarBreaker,
