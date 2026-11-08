@@ -35,6 +35,9 @@ const CHECK_HEIGHT: u32 = 320;
 const HEAD_RATIO: f32 = 5.0;
 /// A value cell the full pass missed is upscaled by this before it is read on its own
 const CELL_SCALE: u32 = 3;
+/// The "Work Order Accepted" message box around its text, in shares of the text's box (x0, y0, x1, y1): the box
+/// measured ~1.65× the text's width and ~7.5× its height (3840×1600 and 1920×1080), with a margin
+const ACCEPTED_BOX: (f32, f32, f32, f32) = (-0.45, -4.5, 1.45, 5.5);
 
 // ---------------------------------------------------------------------------------------------------------------
 // Output
@@ -74,6 +77,9 @@ pub struct WorkOrder {
     /// Processing: the time remaining, in seconds
     pub time_remaining: Field<u32>,
     pub rows: Vec<Row>,
+    /// The "Work Order Accepted" message lies over the panel (for a few seconds after an order was accepted):
+    /// rows may be missing or misread
+    pub covered: bool,
 }
 
 /// One table row; `None` values where nothing could be read.
@@ -179,10 +185,13 @@ impl Reader for RefineryReader {
         }
         // The title is the same for every panel: the leftmost's
         let station = found[0].station.as_deref().map(|s| Name::new(s, frame.locale));
+        let accepted = accepted_boxes(&boxes, labels);
         let mut orders = Vec::new();
         let mut panels = Vec::new();
         for l in found {
-            let (order, panel) = read_order(ocr, frame, &boxes, l)?;
+            let covered = accepted.iter().any(|a| overlaps(*a, l.area));
+            let (mut order, panel) = read_order(ocr, frame, &boxes, l)?;
+            order.covered = covered;
             orders.push(order);
             if with_panels {
                 panels.push(panel);
@@ -213,6 +222,16 @@ fn is_title(text: &str, labels: &Labels) -> bool {
 fn is_head(text: &str, labels: &Labels) -> bool {
     let t = norm(text);
     labels.head.iter().any(|h| t.starts_with(h.as_str()))
+}
+
+/// Where a "Work Order Accepted" message lies: the message box around each of its texts.
+fn accepted_boxes(boxes: &[TextBox], labels: &Labels) -> Vec<Rect> {
+    boxes.iter().filter(|b| labels.accepted.contains(&norm(&b.text))).map(|b| b.rect.part(ACCEPTED_BOX)).collect()
+}
+
+/// Whether two boxes overlap (`b` may reach to `f32::MAX`).
+fn overlaps(a: Rect, b: Rect) -> bool {
+    a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0
 }
 
 fn read_order(
@@ -268,7 +287,7 @@ fn read_order(
         row_boxes: l.rows.clone(),
         dropped_rows,
     };
-    Ok((WorkOrder { status: l.status, time_remaining, rows }, panel))
+    Ok((WorkOrder { status: l.status, time_remaining, rows, covered: false }, panel))
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -280,7 +299,7 @@ mod tests {
     use image::RgbImage;
     use sc_ohseearr_sc::{LocTable, Locale};
 
-    /// The 9 keys with the English texts (test data standing in for the English table).
+    /// The 10 keys with the English texts (test data standing in for the English table).
     const ENGLISH_INI: &str = "\
 refinery_ui_jobcard_table_materialsyielded=Materials Yielded (cSCU)
 refinery_ui_workordercard_title_processing=Processing
@@ -291,6 +310,7 @@ refinery_ui_jobcard_table_yield=Yield
 refinery_ui_jobcard_table_todo=To Do
 refinery_ui_jobcard_table_done=Done
 refinery_ui_refinementcenter=Refinement Center
+refinery_ui_Notification_JobCreated=Work Order Accepted
 ";
 
     /// A language pack with some of the keys translated.
@@ -333,6 +353,26 @@ refinery_ui_workordercard_title_completed=Completed
         // Only a pack: only its texts
         let only_pack = Locale::new(Some(LocTable::parse(GERMAN_INI)), None).unwrap();
         assert!(Labels::from_locale(&only_pack).quality.is_empty());
+    }
+
+    #[test]
+    fn the_accepted_message_covers_the_panels_under_it() {
+        let l = Labels::from_locale(&english());
+        assert_eq!(l.accepted, ["WORKORDERACCEPTED"]);
+        let text = |x0: f32, text: &str| TextBox {
+            rect: Rect { x0, y0: 500.0, x1: x0 + 400.0, y1: 520.0 },
+            text: text.into(),
+            score: 1.0,
+        };
+        let found = accepted_boxes(&[text(1000.0, "WORK ORDER ACCEPTED"), text(0.0, "WORK ORDER COMPLETE")], &l);
+        // The message box: 820–1580 wide, 410–610 high
+        assert_eq!(found.len(), 1);
+        let panel = |x0: f32, x1: f32| Rect { x0, y0: 300.0, x1, y1: f32::MAX };
+        assert!(overlaps(found[0], panel(900.0, 1100.0)));
+        assert!(overlaps(found[0], panel(1300.0, 1500.0)));
+        assert!(overlaps(found[0], panel(500.0, 830.0)));
+        assert!(!overlaps(found[0], panel(1600.0, 1900.0)));
+        assert!(!overlaps(found[0], Rect { x0: 900.0, y0: 0.0, x1: 1100.0, y1: 400.0 }));
     }
 
     #[test]

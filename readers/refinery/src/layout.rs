@@ -55,6 +55,8 @@ pub(crate) struct Layout {
     pub(crate) names: Vec<String>,
     /// The value columns in table order (processing: QUALITY YIELD TODO DONE; completed: QUALITY YIELD)
     pub(crate) columns: Vec<Column>,
+    /// The panel from its header down to the end of the table (`f32::MAX` when no label below it was read)
+    pub(crate) area: Rect,
 }
 
 /// The columns `wanted` (each: its label in every language) among the head's words, left to right; a label may
@@ -179,6 +181,7 @@ fn layout_at(boxes: &[TextBox], head: &TextBox, right_limit: f32, labels: &Label
         names: rows.iter().map(|b| b.text.trim().to_string()).collect(),
         rows: rows.iter().map(|b| b.rect).collect(),
         columns,
+        area: Rect { x0: panel_left, y0: header.rect.y0, x1: panel_right, y1: end },
     })
 }
 

@@ -4,7 +4,7 @@
 use sc_ohseearr_sc::{Locale, norm};
 
 /// The loc keys of the texts the reader anchors on, in the order of `Labels`' fields.
-pub const KEYS: [&str; 9] = [
+pub const KEYS: [&str; 10] = [
     // The table head of a work order ("Materials Yielded (cSCU)")
     "refinery_ui_jobcard_table_materialsyielded",
     "refinery_ui_workordercard_title_processing",
@@ -17,6 +17,8 @@ pub const KEYS: [&str; 9] = [
     "refinery_ui_jobcard_table_done",
     // The terminal's title ("Refinement Center")
     "refinery_ui_refinementcenter",
+    // The message shown over the panels for a few seconds after a work order was accepted ("Work Order Accepted")
+    "refinery_ui_notification_jobcreated",
 ];
 
 /// The terminal's texts the OCR looks for, each normalized (`norm`) after cutting at a parenthesis (a trailing
@@ -35,6 +37,8 @@ pub struct Labels {
     pub done: Vec<String>,
     /// The terminal's title ("Refinement Center")
     pub center: Vec<String>,
+    /// The message over the panels after a work order was accepted ("Work Order Accepted")
+    pub accepted: Vec<String>,
 }
 
 impl Labels {
@@ -60,6 +64,7 @@ impl Labels {
             todo: label(6),
             done: label(7),
             center: label(8),
+            accepted: label(9),
         }
     }
 

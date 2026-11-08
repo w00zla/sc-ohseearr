@@ -11,7 +11,7 @@ panel shown side by side (running or completed) with its materials, qualities, y
 | Verified resolutions | 1080p and 3840×1600 (frames are scaled by their height) |
 | Read time | probe 30–110 ms at 2 threads on 3840×1600 (320 px height); full read ~0.9 s on 3840×1600 (companion docs; 800 px height, only the wide boxes first: frames without a table head skip the rest) |
 | Reader | `RefineryReader` (`Reader`): `probe` = a refinery title is in view, `read` = the overview |
-| Output | `Refinery { screen: Overview \| Terminal \| Nothing, station: Option<Name>, orders: Vec<WorkOrder> }`; `WorkOrder { status, time_remaining: Field<u32> (s), rows: Vec<Row { material: Name, quality: Field<u32>, yield_cscu: Field<u32> }> }` |
+| Output | `Refinery { screen: Overview \| Terminal \| Nothing, station: Option<Name>, orders: Vec<WorkOrder> }`; `WorkOrder { status, time_remaining: Field<u32> (s), rows: Vec<Row { material: Name, quality: Field<u32>, yield_cscu: Field<u32> }>, covered: bool }`; `covered`: the "Work Order Accepted" message lies over the panel (a few seconds after an order was accepted), rows may be missing or misread: do not take such an order as it is |
 | Diagnostics | `RefineryDiagnostics { boxes, panels }`: all text boxes read; per panel (after `set_diagnostics(true)`) the columns, the row boxes and the rows dropped for lacking a quality |
 
 A panel cut by the screen's edge is left out (the terminal scrolls sideways); a row without a quality is dropped;
@@ -20,8 +20,8 @@ a value cell the full pass missed is read again on its own (3× upscaled, digits
 ## Locale requirement
 
 The reader needs `Frame::locale`; without it `read` and `probe` return `ReadError::Locale(NoLanguageTable)`.
-It knows only the 9 loc keys in `KEYS` (table head, "processing", "completed", time remaining, quality, yield,
-to do, done, refinement center). Per frame (cached while the texts stay the same) it takes for each key
+It knows only the 10 loc keys in `KEYS` (table head, "processing", "completed", time remaining, quality, yield,
+to do, done, refinement center, "Work Order Accepted"). Per frame (cached while the texts stay the same) it takes for each key
 `Locale::texts(key)` (the language pack's text, then the English table's), cuts it at `(` ("Materials Yielded
 (cSCU)": the parenthesis is often a box of its own), normalizes it (`norm`) and drops duplicates.
 
@@ -42,4 +42,4 @@ cargo run --release -p sc-ohseearr-refinery --example regress-refinery -- --engl
 ```
 
 `cargo test -p sc-ohseearr-refinery --release` also runs the screenshot tests over `refinery flow`, `… 2`, `… 3`
-under the data root (skipped silently when absent), with a small test ini holding just the 9 keys.
+under the data root (skipped silently when absent), with a small test ini holding just the 10 keys.
