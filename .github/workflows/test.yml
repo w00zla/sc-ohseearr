@@ -20,6 +20,7 @@ env:
 
 jobs:
   rust:
+    name: rust (${{ matrix.platform }})
     strategy:
       fail-fast: false
       matrix:
