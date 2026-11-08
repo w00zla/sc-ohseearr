@@ -14,7 +14,7 @@ use std::path::Path;
 use std::time::Instant;
 
 use sc_ohseearr_refinery::RefineryReader;
-use sc_ohseearr_sc::{Frame, LocTable, Locale, ScreenReader};
+use sc_ohseearr_sc::{Frame, LocTable, Locale, Reader};
 use sc_ohseearr_test_support::{Args, frames};
 
 fn main() {

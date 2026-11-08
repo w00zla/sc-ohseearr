@@ -15,23 +15,23 @@ any app that reads the game's UI.
 | Path | Crate | What |
 |---|---|---|
 | `crates/core` | `sc-ohseearr-core` | engine: model families, model packages, `Ocr`, line grouping, image helpers |
-| `crates/sc` | `sc-ohseearr-sc` | the game: `Locale` (texts from `global.ini` by loc key, names → loc keys), `CenterUi`, value parsers, the `ScreenReader` interface |
+| `crates/sc` | `sc-ohseearr-sc` | the game: `Locale` (texts from `global.ini` by loc key, names → loc keys), `CenterUi`, value parsers, the `Reader` interface |
 | `crates/capture-win` | `sc-ohseearr-capture-win` | live capture of a game window on Windows (DXGI), cursor rest, change gate |
-| `crates/test-support` | `sc-ohseearr-test-support` | dev-only (not published): the data root, arguments, frames and OCR the use cases' tests and `regress` examples share |
+| `crates/test-support` | `sc-ohseearr-test-support` | dev-only (not published): the data root, arguments, frames and OCR the readers' tests and `regress` examples share |
 | `models/*` | `sc-ohseearr-model-*` | model packages (below) |
-| `usecases/*` | `sc-ohseearr-<screen>` | screen readers with their cards and regression setup: `warehouse`, `gear-inventory`, `refinery` |
+| `readers/*` | `sc-ohseearr-<reader>` | readers with their cards and regression setup: `warehouse`, `gear-inventory`, `refinery` |
 | `training/` | — | training pipelines and recipes that produce model packages |
 | `scripts/` | — | `extract-global-ini.{ps1,sh}`: the game's English texts from `Data.p4k` (StarBreaker CLI) |
 
-## Screen readers
+## Readers
 
-| Use case | Screen | Pattern |
+| Reader | Reads | Pattern |
 |---|---|---|
-| [`warehouse`](usecases/warehouse/README.md) | freight manager's warehouse grid and tooltip | a learned layout model, then targeted reads |
-| [`gear-inventory`](usecases/gear-inventory/README.md) | character inventory: hovered item's tooltip, page, tile | calibrated geometry around the frame's centre |
-| [`refinery`](usecases/refinery/README.md) | refinery terminal's work orders | text anchors by loc key (needs the game's texts) |
+| [`warehouse`](readers/warehouse/README.md) | freight manager's warehouse grid and tooltip | a learned layout model, then targeted reads |
+| [`gear-inventory`](readers/gear-inventory/README.md) | character inventory: hovered item's tooltip, page, tile | calibrated geometry around the frame's centre |
+| [`refinery`](readers/refinery/README.md) | refinery terminal's work orders | text anchors by loc key (needs the game's texts) |
 
-Each implements `sc::ScreenReader` (`probe`, `read`, `reset`, `set_diagnostics`) on a `Frame { id, image, cursor,
+Each implements `sc::Reader` (`probe`, `read`, `reset`, `set_diagnostics`) on a `Frame { id, image, cursor,
 locale }` and returns neutral output: what the game shows, uncertain values as `Field` (value, raw text, score,
 ambiguous), names as `Name` with candidate loc keys. Which screen is visible is the app's business.
 

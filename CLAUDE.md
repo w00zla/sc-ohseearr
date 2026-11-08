@@ -5,13 +5,13 @@ Guidance for Claude Code in this repository.
 ## Project
 
 `sc-ohseearr`: OCR for Star Citizen screens in Rust, extracted from the Quartermaster companion (2026-11-05/06). The
-crates, model packages, use cases and pipelines: README.md, "Layout"; each use case's card in `usecases/<name>/README.md`.
+crates, model packages, readers and pipelines: README.md, "Layout"; each reader's card in `readers/<name>/README.md`.
 
 Status: private on GitHub (w00zla/sc-ohseearr), public after the user's acceptance. Phases 1–5 of ADR 0004 are built; phase 6, the mining HUD
 reader as acceptance test (ADR 0009), is not. Every decision is an ADR in `docs/adr/`: read `docs/adr/README.md` before
 proposing a design and never re-propose a declined alternative unless its forces changed.
 
-Consumers: the Quartermaster companion `../sc-qm-companion` (path dependencies on core, sc, capture-win, the use cases
+Consumers: the Quartermaster companion `../sc-qm-companion` (path dependencies on core, sc, capture-win, the readers
 and model crates). Its `scripts/regression-dumps.sh`, compared byte for byte with a baseline, is the gate for any change
 here that could move results.
 
@@ -39,7 +39,7 @@ cargo clippy --release --workspace --all-targets --features sc-ohseearr-core/dir
 cargo fmt --all
 cargo run --release --example ocr_dump -- <image> [max_height] [threads] [--det <dir>] [--rec <dir>] [--gpu]
 cargo run --release --example layout_dump -- <image> [x y w h] [--layout <dir>]
-cargo run --release -p sc-ohseearr-<usecase> --example regress-<usecase> -- [folders] [--data <root>] [--threads n (3)] [--gpu]   # usecase: warehouse, gear-inventory, refinery (needs --english <global.ini> and/or --pack <ini>)
+cargo run --release -p sc-ohseearr-<reader> --example regress-<reader> -- [folders] [--data <root>] [--threads n (3)] [--gpu]   # reader: warehouse, gear-inventory, refinery (needs --english <global.ini> and/or --pack <ini>)
 cargo run --release -p sc-ohseearr-capture-win --example grab -- [exe] [out.png] [delay_s]
 scripts/extract-global-ini.ps1 -StarBreaker <starbreaker.exe> -P4k <Data.p4k> -Out <dir>   # or .sh; -> global-english-<version>.ini
 ```

@@ -1,6 +1,6 @@
 # warehouse
 
-Use case card: the freight manager's warehouse reader.
+Reader card: the freight manager's warehouse reader.
 
 | | |
 |---|---|
@@ -16,7 +16,7 @@ Use case card: the freight manager's warehouse reader.
 
 ## API
 
-- `WarehouseReader`: `ScreenReader` with `Output = Warehouse`, `Diagnostics = WarehouseDiagnostics`.
+- `WarehouseReader`: `Reader` with `Output = Warehouse`, `Diagnostics = WarehouseDiagnostics`.
   - `probe`: the whole read; true when a grid is fitted. Kept for `read` of the same `Frame::id`.
   - `read`: the grid and the tooltip. A fit with weight ≥ `STRONG_FIT_WEIGHT` becomes the prior (`prior()`).
   - `reset`: drops the prior (the screen was left, the scan stopped: the next terminal may be seen from elsewhere).

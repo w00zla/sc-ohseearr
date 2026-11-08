@@ -1,6 +1,6 @@
 # 0010. The screen reader interface
 
-- Status: accepted
+- Status: accepted; the trait name `ScreenReader` superseded by [0013](0013-readers-instead-of-use-cases-and-screen-readers.md) (`Reader`)
 - Date: 2026-11-06
 - Scope: `crates/sc` (`reader`), `usecases/*`
 

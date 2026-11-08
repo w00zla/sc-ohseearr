@@ -1,4 +1,4 @@
-//! The warehouse screen reader: the freight manager's warehouse tab (freight elevator terminal, SC 4.x).
+//! The warehouse reader: the freight manager's warehouse tab (freight elevator terminal, SC 4.x).
 //!
 //! A grid of 4 columns of tiles, scrolled without pages. Every tile has a count badge top right ("X1", "X14");
 //! a material tile shows its quality bottom left ("572Q", the Q dim). The icons look alike, so the name comes from
@@ -16,7 +16,7 @@ mod fit;
 mod read;
 
 use sc_ohseearr_core::{Error, NanoDet, Ocr, Rect, TextBox, Timings};
-use sc_ohseearr_sc::{Diagnostics, Field, Frame, Name, ReadError, Reading, ScreenReader};
+use sc_ohseearr_sc::{Diagnostics, Field, Frame, Name, ReadError, Reader, Reading};
 use serde::Serialize;
 
 pub use read::parse_badge;
@@ -199,7 +199,7 @@ impl WarehouseReader {
     }
 }
 
-impl ScreenReader for WarehouseReader {
+impl Reader for WarehouseReader {
     type Output = Warehouse;
     type Diagnostics = WarehouseDiagnostics;
 

@@ -1,11 +1,11 @@
-//! The gear-inventory screen reader: the character inventory ("Storage Access", SC 4.x), the hovered item's
+//! The gear-inventory reader: the character inventory ("Storage Access", SC 4.x), the hovered item's
 //! tooltip, the storage pane's page and the tile under the cursor.
 //!
 //! Pattern: calibrated geometry. The screen is a panel around the frame's centre; positions are measured shares
 //! of the frame's height, scaled by a factor `k` the page number's place tells. See `read.rs` for the algorithm
-//! and `README.md` for the use case card.
+//! and `README.md` for the reader card.
 //!
-//! - `GearInventoryReader` implements `ScreenReader`: `probe` reads the page number (which also tells this screen
+//! - `GearInventoryReader` implements `Reader`: `probe` reads the page number (which also tells this screen
 //!   from the freight manager's terminal), `read` reads the rest. The reader keeps `k` across frames.
 //! - `read_components` reads one frame without state (the regression's reference path).
 
@@ -13,7 +13,7 @@ mod read;
 
 use image::RgbImage;
 use sc_ohseearr_core::{Line, Ocr, Rect, TextBox};
-use sc_ohseearr_sc::reader::{Diagnostics, Field, Frame, Name, ReadError, Reading, ScreenReader};
+use sc_ohseearr_sc::reader::{Diagnostics, Field, Frame, Name, ReadError, Reader, Reading};
 use sc_ohseearr_sc::{CenterUi, Locale};
 use serde::Serialize;
 
@@ -115,7 +115,7 @@ impl GearInventoryReader {
     }
 }
 
-impl ScreenReader for GearInventoryReader {
+impl Reader for GearInventoryReader {
     type Output = GearInventory;
     type Diagnostics = GearDiagnostics;
 

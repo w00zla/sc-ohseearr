@@ -1,6 +1,6 @@
 # refinery
 
-Use case card: the refinery terminal's reader. It reads the work order overview: the station and every work order
+Reader card: the refinery terminal's reader. It reads the work order overview: the station and every work order
 panel shown side by side (running or completed) with its materials, qualities, yields and time remaining.
 
 | | |
@@ -10,7 +10,7 @@ panel shown side by side (running or completed) with its materials, qualities, y
 | Game version | SC 4.x (layout of the screenshots 2026-10-07/08, recordings 2026-10-19) |
 | Verified resolutions | 1080p and 3840×1600 (frames are scaled by their height) |
 | Read time | probe 30–110 ms at 2 threads on 3840×1600 (320 px height); full read ~0.9 s on 3840×1600 (companion docs; 800 px height, only the wide boxes first: frames without a table head skip the rest) |
-| Reader | `RefineryReader` (`ScreenReader`): `probe` = a refinery title is in view, `read` = the overview |
+| Reader | `RefineryReader` (`Reader`): `probe` = a refinery title is in view, `read` = the overview |
 | Output | `Refinery { screen: Overview \| Terminal \| Nothing, station: Option<Name>, orders: Vec<WorkOrder> }`; `WorkOrder { status, time_remaining: Field<u32> (s), rows: Vec<Row { material: Name, quality: Field<u32>, yield_cscu: Field<u32> }> }` |
 | Diagnostics | `RefineryDiagnostics { boxes, panels }`: all text boxes read; per panel (after `set_diagnostics(true)`) the columns, the row boxes and the rows dropped for lacking a quality |
 

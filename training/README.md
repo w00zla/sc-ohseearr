@@ -166,12 +166,12 @@ environment.
 `weight_decay`, `warmup_steps`, `seed`, `augment` (NanoDet's pipeline keys)), `decode` (`score`, `nms`: into
 `model.toml`), `eval` (`split`, `iou`, `threads`), `shots` (`height`, `area`, `overlap`).
 
-## A new use case (e.g. the mining HUD)
+## A new reader (e.g. the mining HUD)
 
 No code changes, only a recipe and data:
 
 1. **Layout**: collect screenshots (or recordings) of the HUD, label the parts (any COCO-capable labelling tool,
-   or a converter from an app's own recordings) into `local/<usecase>/coco/{train,val}.json` with the windows at
+   or a converter from an app's own recordings) into `local/<reader>/coco/{train,val}.json` with the windows at
    the input size you want; add screenshots of other screens as negatives. Copy `sc-warehouse-layout.yml` to
    `recipes/sc-mining-hud-layout.yml`, change `id`, `package`, `data`, `classes`, `input`, maybe `augment` and
    `epochs`. `PY training/layout labels <recipe>` to check the labels, then run it.

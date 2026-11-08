@@ -1,4 +1,4 @@
-//! What the use cases' tests and `regress` examples share: the data root, the arguments (`--data`, `--threads`,
+//! What the readers' tests and `regress` examples share: the data root, the arguments (`--data`, `--threads`,
 //! `--gpu`), the folders of `regression.toml`, the frames of a folder, the cursor of a debug recording's frame and
 //! the OCR they run on. Dev-only (`publish = false`).
 

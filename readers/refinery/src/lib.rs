@@ -1,4 +1,4 @@
-//! The refinery terminal's screen reader: the station's name from the terminal's title and every work order shown
+//! The refinery terminal's reader: the station's name from the terminal's title and every work order shown
 //! side by side (each a panel with its own table, the newest not necessarily first), running ("Processing":
 //! refined materials with quality and yield in cSCU, time remaining) or finished ("Completed": quality and
 //! yield). With more work orders than fit, the terminal scrolls them sideways: a frame shows only some, a panel
@@ -18,7 +18,7 @@ mod layout;
 
 use sc_ohseearr_core::{FilterType, Ocr, Rect, TextBox, crop, resize};
 use sc_ohseearr_sc::parse::{duration, number};
-use sc_ohseearr_sc::reader::{Diagnostics, Field, Frame, Name, ReadError, Reading, ScreenReader};
+use sc_ohseearr_sc::reader::{Diagnostics, Field, Frame, Name, ReadError, Reader, Reading};
 use sc_ohseearr_sc::{LocaleError, norm};
 use serde::Serialize;
 
@@ -145,7 +145,7 @@ fn bare(screen: Screen, boxes: Vec<TextBox>) -> Reading<Refinery, RefineryDiagno
     }
 }
 
-impl ScreenReader for RefineryReader {
+impl Reader for RefineryReader {
     type Output = Refinery;
     type Diagnostics = RefineryDiagnostics;
 

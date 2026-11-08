@@ -11,7 +11,7 @@
 //! over to the next frames, `reset` at each folder. Diagnostics are on (every tile's badge read), as in the
 //! companion's `inventory_dump` and its debug window. The lines go to stdout (the timing to stderr):
 //! `{"frame", "cursor", "output", "diagnostics"}`; `frame` is `<folder>/<file stem>`.
-use sc_ohseearr_sc::{Frame, ScreenReader};
+use sc_ohseearr_sc::{Frame, Reader};
 use sc_ohseearr_test_support::{Args, cursor_of, frames};
 use sc_ohseearr_warehouse::WarehouseReader;
 

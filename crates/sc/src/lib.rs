@@ -1,4 +1,4 @@
-//! The Star Citizen layer: what every screen reader of the game needs, whatever the screen.
+//! The Star Citizen layer: what every reader of the game needs, whatever it reads.
 //!
 //! - `locale`: the texts the game shows come from its `global.ini` (a language pack, else the English table
 //!   extracted from the game); readers name their anchors by loc key and resolve read names to loc keys.
@@ -11,5 +11,5 @@ pub mod reader;
 pub mod ui;
 
 pub use locale::{LocTable, Locale, LocaleError, LocaleSource, norm};
-pub use reader::{Diagnostics, Field, Frame, Name, ReadError, Reading, ScreenReader};
+pub use reader::{Diagnostics, Field, Frame, Name, ReadError, Reader, Reading};
 pub use ui::CenterUi;

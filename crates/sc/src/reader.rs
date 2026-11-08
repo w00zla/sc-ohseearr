@@ -1,4 +1,4 @@
-//! The interface of a screen reader (ADR 0010): one game screen, its own state, neutral output.
+//! The interface of a reader (ADRs 0010, 0013): one part of the game's UI, its own state, neutral output.
 //!
 //! Which screen is visible is the app's business (it may probe several readers in its own order); a reader answers
 //! `probe` ("is my screen in this frame?") and `read` ("what does it show?"). Work done by `probe` may be reused by
@@ -114,7 +114,7 @@ pub trait Diagnostics: Default {
 }
 
 /// A reader of one game screen.
-pub trait ScreenReader {
+pub trait Reader {
     type Output;
     type Diagnostics: Diagnostics;
 

@@ -1,6 +1,6 @@
 [package]
 name = "sc-ohseearr-warehouse"
-description = "sc-ohseearr use case: the warehouse screen reader"
+description = "sc-ohseearr reader: warehouse"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

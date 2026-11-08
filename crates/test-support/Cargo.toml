@@ -1,6 +1,6 @@
 [package]
 name = "sc-ohseearr-test-support"
-description = "Shared helpers of the use cases' tests and regress examples (not published)"
+description = "Shared helpers of the readers' tests and regress examples (not published)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

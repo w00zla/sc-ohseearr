@@ -1,6 +1,6 @@
 # gear-inventory
 
-Use case card: the character inventory reader.
+Reader card: the character inventory reader.
 
 | | |
 |---|---|
@@ -15,7 +15,7 @@ Use case card: the character inventory reader.
 
 ## API
 
-- `GearInventoryReader`: `ScreenReader` with `Output = GearInventory`, `Diagnostics = GearDiagnostics`.
+- `GearInventoryReader`: `Reader` with `Output = GearInventory`, `Diagnostics = GearDiagnostics`.
   - `probe`: reads the page number (around where the kept scale puts it; over every place without one). It also
     tells this screen from the freight manager's terminal. Kept for `read` of the same `Frame::id`.
   - `read`: the page, the tile under the cursor, the tooltip, the tile's count. With a cursor that is on no lit tile

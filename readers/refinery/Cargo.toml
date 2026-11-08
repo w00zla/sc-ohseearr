@@ -1,6 +1,6 @@
 [package]
-name = "sc-ohseearr-gear-inventory"
-description = "sc-ohseearr use case: the gear-inventory screen reader"
+name = "sc-ohseearr-refinery"
+description = "sc-ohseearr reader: refinery"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -20,5 +20,5 @@ serde_json = "1"
 
 # Unique per package: the examples of a workspace share one output folder
 [[example]]
-name = "regress-gear-inventory"
+name = "regress-refinery"
 path = "examples/regress.rs"

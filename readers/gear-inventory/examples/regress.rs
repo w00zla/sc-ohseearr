@@ -12,7 +12,7 @@
 //! scale). The lines go to stdout (the timing to stderr): `{"frame", "cursor", "output", "diagnostics"}`; `frame`
 //! is `<folder's name>/<file stem>`.
 use sc_ohseearr_gear_inventory::{GearInventoryReader, read_components};
-use sc_ohseearr_sc::reader::{Frame, ScreenReader};
+use sc_ohseearr_sc::reader::{Frame, Reader};
 use sc_ohseearr_test_support::{Args, cursor_of, frames};
 
 fn main() {
