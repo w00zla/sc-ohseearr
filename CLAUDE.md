@@ -11,10 +11,6 @@ Status: public on GitHub (w00zla/sc-ohseearr), released by tags. Phases 1–5 of
 HUD reader as the test of the layering (ADR 0009), comes after the public release (ADR 0022). Every decision is an ADR in `docs/adr/`: read `docs/adr/README.md` before
 proposing a design and never re-propose a declined alternative unless its forces changed.
 
-Consumers: the Quartermaster companion `../sc-qm-companion` (path dependencies on core, sc, capture-win, the readers
-and model crates). Its `scripts/regression-dumps.sh`, compared byte for byte with a baseline, is the gate for any change
-here that could move results.
-
 ## Rules
 
 - **English everywhere**: code, comments, docs, UI texts, commit messages.
@@ -34,8 +30,9 @@ here that could move results.
 - **Readers' output is neutral** (ADR 0006, 0010): what the game shows, typed; diagnostics separate.
 - **KISS and explicit** (ADR 0017): no hidden shortcuts (a reader building its own model, lazy rebuilds on changed
   terms); the app makes every model and passes it in. A little more boilerplate beats logic nobody checks.
-- **Results must not change silently**: a change to the engine, a model or a reader keeps the consumer's regression
-  dumps identical, or the difference is shown to and accepted by the user.
+- **Results must not change silently**: a change to the engine, a model or a reader keeps every reader's `regress`
+  output over its regression sets identical (before/after, byte for byte), or the difference is shown to and
+  accepted by the user.
 - `ort` stays pinned (`=2.0.0-rc.13`); `rustfmt.toml` (max width 120) applies; clippy clean.
 - **Pull requests only** (ADR 0023): branch from `main`, open a pull request, squash merge; a ruleset on `main`
   enforces it. Commits carry the attribution trailer.
