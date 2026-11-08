@@ -12,7 +12,7 @@ starbreaker-ps (https://github.com/w00zla/starbreaker-ps). Untested while
 the game runs and holds Data.p4k open.
 
 .EXAMPLE
-./scripts/extract-global-ini.ps1 -StarBreaker C:\tools\starbreaker.exe -P4k "F:\Games\StarCitizen\LIVE\Data.p4k" -Out .\local
+./scripts/extract-global-ini.ps1 -StarBreaker C:\tools\starbreaker.exe -P4k "<install>\StarCitizen\LIVE\Data.p4k" -Out .\local
 #>
 param(
     [Parameter(Mandatory)] [string] $StarBreaker,

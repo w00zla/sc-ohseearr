@@ -7,8 +7,8 @@ Guidance for Claude Code in this repository.
 `sc-ohseearr`: OCR for Star Citizen screens in Rust, extracted from the Quartermaster companion (2026-11-05/06). The
 crates, model packages, readers and pipelines: README.md, "Layout"; each reader's card in `readers/<name>/README.md`.
 
-Status: private on GitHub (w00zla/sc-ohseearr), public after the user's acceptance. Phases 1–5 of ADR 0004 are built; phase 6, the mining HUD
-reader as acceptance test (ADR 0009), is not. Every decision is an ADR in `docs/adr/`: read `docs/adr/README.md` before
+Status: public on GitHub (w00zla/sc-ohseearr), released by tags. Phases 1–5 of ADR 0004 are built; phase 6, the mining
+HUD reader as the test of the layering (ADR 0009), comes after the public release (ADR 0022). Every decision is an ADR in `docs/adr/`: read `docs/adr/README.md` before
 proposing a design and never re-propose a declined alternative unless its forces changed.
 
 Consumers: the Quartermaster companion `../sc-qm-companion` (path dependencies on core, sc, capture-win, the readers
@@ -37,7 +37,8 @@ here that could move results.
 - **Results must not change silently**: a change to the engine, a model or a reader keeps the consumer's regression
   dumps identical, or the difference is shown to and accepted by the user.
 - `ort` stays pinned (`=2.0.0-rc.13`); `rustfmt.toml` (max width 120) applies; clippy clean.
-- Commits on `main`, with the attribution trailer.
+- **Pull requests only** (ADR 0023): branch from `main`, open a pull request, squash merge; a ruleset on `main`
+  enforces it. Commits carry the attribution trailer.
 - Python only through the venv (`local/detector/.venv/Scripts/python.exe -I`), never bare `python`; no WSL.
 
 ## Commands
