@@ -18,6 +18,8 @@ here that could move results.
 ## Rules
 
 - **English everywhere**: code, comments, docs, UI texts, commit messages.
+- **READMEs (all of them, also `MODEL.md`) describe the current state only**: no ADR numbers or links, no plans,
+  open points, phases or "to come"/"until replaced". Decisions live in `docs/adr/`, plans in `.claude/open-points.md`.
 - **ADRs** in `docs/adr/` for architecture decisions, written only after the user decided (skill `adr`).
 - **Game data in git only as small excerpts** (ADR 0015): what a test, eval or example concretely needs (the loc keys
   a test reads, a few records, single crops or frames; a file up to ~1 MB, a set a few MB), with its source noted.

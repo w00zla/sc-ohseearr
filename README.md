@@ -25,8 +25,7 @@
 - **Training included:** one recipe per model turns local data into a model package; a new screen is a recipe and
   data, no engine code.
 
-> **Status:** early, APIs change until 1.0. Decisions and plans: [`docs/adr/`](docs/adr/README.md).
-> The acceptance test of the layering, a mining HUD reader built only from these parts, is still to come.
+> **Status:** early, APIs change until 1.0.
 
 ## Requirements
 
@@ -75,6 +74,8 @@ if reader.probe(&mut ocr, &frame)? {
 }
 ```
 
+- Every reader takes the `Ocr` above (detector and recognizer); a reader with a model of its own brings it as its
+  dependency: `sc-ohseearr-warehouse` the layout model `sc-ohseearr-model-sc-warehouse-layout`.
 - `ort` is pinned to `=2.0.0-rc.13`: a build has one ONNX Runtime, so a consumer uses that version too.
 - GPU: the feature `directml` of `sc-ohseearr-core`, then `Ocr::new(.., true)`.
 - Frames go in at their native size; the readers scale them by their height (the game's UI scales with it, on 16:9
@@ -163,16 +164,15 @@ the `regress` examples (`--data <root>`) and the training pipelines (`--data-roo
 
 | Folder | What |
 |---|---|
-| `regression/<reader>/<set>/` | the regression sets: debug recordings the readers' `regression.toml` list (ADR 0014) |
+| `regression/<reader>/<set>/` | the regression sets: debug recordings the readers' `regression.toml` list |
 | `training/<id>/` | training runs |
-| `screenshots/`, `stock_scan_debug/` | scratch for analysis and prototyping, never a fixture (the readers' older screenshot tests still read `screenshots/` until they are replaced) |
+| `screenshots/`, `stock_scan_debug/` | scratch for analysis and prototyping, never a regression set (the readers' screenshot tests read `screenshots/`) |
 
 ## Game data and fan content
 
 The repository holds game data only as small excerpts a test concretely needs (a few loc keys, single crops or
-frames, each with its source noted), never whole game files, fonts or recordings
-([ADR 0015](docs/adr/0015-small-game-data-excerpts-in-git.md)). The readers take the game's texts from your own
-installation; training uses data from your own copy of the game.
+frames, each with its source noted), never whole game files, fonts or recordings. The readers take the game's texts
+from your own installation; training uses data from your own copy of the game.
 
 sc-ohseearr is an unofficial Star Citizen fan project, not endorsed by or affiliated with the Cloud Imperium group of
 companies. Game content and materials are copyright Cloud Imperium Rights LLC and Cloud Imperium Rights Ltd. Star

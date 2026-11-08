@@ -1,7 +1,7 @@
 # Training
 
 Pipelines that turn a **recipe** (one YAML file per model) and local data into a **model package** (`model.onnx`,
-`model.toml`, metrics) like the ones in `models/` (ADR 0005, ADR 0008). One pipeline per model family:
+`model.toml`, metrics) like the ones in `models/`. One pipeline per model family:
 
 | Pipeline | Family | Makes | Recipes |
 |---|---|---|---|
@@ -9,11 +9,10 @@ Pipelines that turn a **recipe** (one YAML file per model) and local data into a
 | `training/layout` | `nanodet` | a screen's layout detector: NanoDet-Plus-m trained on a COCO dataset | `sc-warehouse-layout` |
 
 Training data stays in the data root (README.md, ["Data root"](../README.md#data-root)): game fonts, screenshots,
-recordings, language files and generated datasets are whole files, which never go into git (ADR 0015: only small
+recordings, language files and generated datasets are whole files, which never go into git (only small
 excerpts a test needs). Code and recipes are versioned; the English `global.ini` comes from
 any tool that extracts it from `Data.p4k` (our `scripts/extract-global-ini.{ps1,sh}` with StarBreaker), the fonts
-and a translation are placed by hand as below
-(ADR 0016).
+and a translation are placed by hand as below.
 
 ```
 training/
@@ -51,7 +50,7 @@ and two patches for torch 2: `nanodet/data/collate.py`: `string_classes = (str,)
 
 **Fonts** (recognizers drawing the game's UI). Star Citizen draws its UI in Blender Pro, a commercial font: it is
 taken from the player's own `Data.p4k` for local training only and never goes into git or a build (a whole file
-under a third party's licence, ADR 0015). The fonts in
+under a third party's licence). The fonts in
 `local/fonts-sc/ttf/` were made like this:
 
 1. Extract the Scaleform font library `Data/UI/fonts/Shared/fonts_en.swf` (29 fonts; `FontConfig.xml` next to it
@@ -64,8 +63,8 @@ under a third party's licence, ADR 0015). The fonts in
 
 **Language files**: the recipe `sc-rec-latin` reads the English `global.ini` and a German translation; it renders
 synthetic lines from their item names, descriptions, commodity names and refinery texts (`synth.corpora`), so the
-recognizer also knows the words and characters (umlauts, ß) of German players. Neither file is in the repository
-(ADR 0015, 0016); get them yourself:
+recognizer also knows the words and characters (umlauts, ß) of German players. Neither file is in the repository;
+get them yourself:
 
 - **English**: the game keeps it inside `Data.p4k` (`Data/Localization/english/global.ini`): any tool that extracts
   files from `Data.p4k` gets it (there are several); `scripts/extract-global-ini.{ps1,sh}` does it with
@@ -140,7 +139,7 @@ Tools: `PY training/layout eval <recipe> --package <dir>`, `labels <recipe>` (wi
   `train/` and `val/`, at the model's input size. Images without annotations are negatives.
 
 Labels come from a labelling tool, from an earlier read, or are proposed by an existing model (`rec teacher`).
-Converters from one app's own recordings live with that app (ADR 0011): Quartermaster's companion writes the gear
+Converters from one app's own recordings live with that app: Quartermaster's companion writes the gear
 tooltip lines with `components_dump --dataset <dir>` (line crops + `index.tsv` with the boxes), and labels them with
 its `tools/dataset-export/ocr-eval-label.ts` (its catalog and language pack: `index.tsv` → `labels.tsv`). Tools
 over generic inputs are in `training/tools/` (paths from the data root, `--data-root` overrides it):

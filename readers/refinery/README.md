@@ -6,7 +6,7 @@ panel shown side by side (running or completed) with its materials, qualities, y
 | | |
 |---|---|
 | Screen | the refinery terminal ("Refinement Center") with its work order cards |
-| Pattern | **text anchors by loc key** (ADR 0007): table head, panel header, time label and column heads are found by their texts; columns by the head's words, rows by the material names below it. No layout detector. |
+| Pattern | **text anchors by loc key**: table head, panel header, time label and column heads are found by their texts; columns by the head's words, rows by the material names below it. No layout detector. |
 | Game version | SC 4.x (layout of the screenshots 2026-10-07/08, recordings 2026-10-19) |
 | Verified resolutions | 1080p and 3840×1600 (frames are scaled by their height) |
 | Read time | probe 30–110 ms at 2 threads on 3840×1600 (320 px height); full read ~0.9 s on 3840×1600 (companion docs; 800 px height, only the wide boxes first: frames without a table head skip the rest) |
@@ -34,7 +34,7 @@ with only the English table, a player with a language pack is not matched. Give 
 
 `examples/regress.rs` (`regress-refinery`) prints one JSON line per frame (folder, file, probe, output,
 diagnostics) over folders of screenshots or debug recordings; compare the lines before and after a change (no
-expected outputs are kept in git, the images stay local, ADR 0008). `regression.toml` lists the data folders,
+expected outputs are kept in git, the images stay local). `regression.toml` lists the data folders,
 relative to the [data root](../../README.md#data-root); `--threads` defaults to 3, as in the companion's dumps:
 
 ```sh
