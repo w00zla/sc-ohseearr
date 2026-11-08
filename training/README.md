@@ -8,8 +8,10 @@ Pipelines that turn a **recipe** (one YAML file per model) and local data into a
 | `training/rec` | `ctc-rec` | a text line recognizer: PP-OCRv6 tiny rec, its head cut to a charset, fine-tuned on synthetic and real lines | `sc-rec-latin` |
 | `training/layout` | `nanodet` | a screen's layout detector: NanoDet-Plus-m trained on a COCO dataset | `sc-warehouse-layout` |
 
-Data never goes into git: game fonts, screenshots, recordings, language files, crops and generated datasets stay
-in the data root (README.md, ["Data root"](../README.md#data-root)). Only code and recipes are versioned.
+Training data stays in the data root (README.md, ["Data root"](../README.md#data-root)): game fonts, screenshots,
+recordings, language files and generated datasets are whole files, which never go into git (ADR 0015: only small
+excerpts a test needs). Code and recipes are versioned; an export script for the game-derived inputs is planned
+(ADR 0015), until then they are placed by hand as below.
 
 ```
 training/
@@ -46,7 +48,8 @@ and two patches for torch 2: `nanodet/data/collate.py`: `string_classes = (str,)
 `torch._six`; `tools/export_onnx.py`: `dynamo=False` in the `torch.onnx.export` call.
 
 **Fonts** (recognizers drawing the game's UI). Star Citizen draws its UI in Blender Pro, a commercial font: it is
-taken from the player's own `Data.p4k` for local training only and never goes into git or a build. The fonts in
+taken from the player's own `Data.p4k` for local training only and never goes into git or a build (a whole file
+under a third party's licence, ADR 0015). The fonts in
 `local/fonts-sc/ttf/` were made like this:
 
 1. Extract the Scaleform font library `Data/UI/fonts/Shared/fonts_en.swf` (29 fonts; `FontConfig.xml` next to it

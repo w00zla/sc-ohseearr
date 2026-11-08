@@ -111,8 +111,9 @@ missing.
 
 ## Game data and fan content
 
-This repository contains no game data: no screenshots, recordings, game texts or fonts. The readers take the game's
-texts from your own installation, the tests and training pipelines read your own local data.
+This repository holds game data only as small excerpts that tests concretely need (a few loc keys, single crops or
+frames, each with its source noted; ADR 0015), never whole game files, fonts or recordings. The readers take the
+game's texts from your own installation; the training pipelines read data exported from your own copy of the game.
 
 sc-ohseearr is an unofficial Star Citizen fan project, not endorsed by or affiliated with the Cloud Imperium group of
 companies. Game content and materials are copyright Cloud Imperium Rights LLC and Cloud Imperium Rights Ltd. Star

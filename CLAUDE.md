@@ -19,8 +19,11 @@ here that could move results.
 
 - **English everywhere**: code, comments, docs, UI texts, commit messages.
 - **ADRs** in `docs/adr/` for architecture decisions, written only after the user decided (skill `adr`).
-- **No game data in git**: no screenshots, recordings, extracted game files, game texts, crops or fonts (Blender Pro is
-  commercial). Local data lives in `local/` (gitignored: screenshots, recordings, training data, the venv with the NanoDet checkout). Model weights
+- **Game data in git only as small excerpts** (ADR 0015): what a test, eval or example concretely needs (the loc keys
+  a test reads, a few records, single crops or frames; a file up to ~1 MB, a set a few MB), with its source noted.
+  Never whole files: no `global.ini`, fonts (Blender Pro is commercial), `Data.p4k` extracts, complete recordings or
+  datasets; users export those from their own `Data.p4k` with the repo's script (starbreaker-ps). Local data lives
+  in `local/` (gitignored: screenshots, recordings, training data, the venv with the NanoDet checkout). Model weights
   trained on such data are fine (ADR 0002).
 - **No compiled-in game texts**: readers anchor on loc keys and get texts from `Frame::locale` (ADR 0007); test fixtures
   may hold the few keys a test needs.

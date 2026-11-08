@@ -1,6 +1,6 @@
 # 0002. MIT for the code, per-package licenses for models, our weights distributed
 
-- Status: accepted
+- Status: accepted; the bullet keeping the font, screenshots, recordings and any extracted game file out of the repository superseded by [0015](0015-small-game-data-excerpts-in-git.md)
 - Date: 2026-11-05
 - Scope: licensing, models
 
