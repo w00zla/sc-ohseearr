@@ -44,13 +44,31 @@ def head(recipe: Recipe) -> dict:
             "description": p["description"], "source": source}
 
 
+def copy_onnx(src: str, dst: str):
+    """`src` to `dst` without doc strings and metadata: PyTorch's export writes the trace with the exporting
+    machine's source paths into every node's doc string. The weights and the graph stay as they are."""
+    import onnx
+
+    m = onnx.load(src)
+    for n in m.graph.node:
+        n.doc_string = ""
+    for v in [*m.graph.input, *m.graph.output, *m.graph.value_info, *m.graph.initializer]:
+        v.doc_string = ""
+    m.graph.doc_string = m.doc_string = ""
+    del m.metadata_props[:]
+    onnx.save(m, dst)
+
+
 def write(folder: str, recipe: Recipe, sections: dict[str, dict], files: dict[str, str], metrics: dict,
           metrics_md: str) -> str:
-    """The package in `folder`: `files` maps package file names to sources (copied), `metrics` goes to
-    metrics.json, `metrics_md` to MODEL.metrics.md."""
+    """The package in `folder`: `files` maps package file names to sources (copied; an `.onnx` without its doc
+    strings and metadata), `metrics` goes to metrics.json, `metrics_md` to MODEL.metrics.md."""
     os.makedirs(folder, exist_ok=True)
     for name, src in files.items():
-        shutil.copyfile(src, os.path.join(folder, name))
+        if name.endswith(".onnx"):
+            copy_onnx(src, os.path.join(folder, name))
+        else:
+            shutil.copyfile(src, os.path.join(folder, name))
     with open(os.path.join(folder, "model.toml"), "w", encoding="utf-8", newline="\n") as f:
         f.write(manifest(head(recipe), sections))
     with open(os.path.join(folder, "metrics.json"), "w", encoding="utf-8", newline="\n") as f:
