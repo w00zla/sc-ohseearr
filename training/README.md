@@ -162,23 +162,28 @@ environment.
   PyTorch weights' repo and revision).
 - `charset`: `ranges` (inclusive code point ranges), `chars`: what the cut keeps besides blank and space.
 - `input`: `height`, `width` (nominal), `max_width`.
-- `synth`: `count`, `seed`, `val_count`, `val_seed`, `workers`; texts: `packs` (name → `key=value` file),
+- `synth`: `count`, `seed`, `val_count`, `val_seed`; texts: `packs` (name → `key=value` file),
   `char_map`, `reject`, `corpora` (pools from packs: `ini`; derived: `match`, `words`), `lists`; the mix `kinds`
   (`name`, `w`, `style`, `text` spec or `label_value`); `colours` (name → RGB), `fonts` (`dir`, `fallback`,
   `caps_only`, `groups` with `hscale`/`stroke` ranges), `backgrounds` (bank → `glob`, `flip`, `jitter`, optional
   `build`), `styles` (per style: `fonts`, `cap` heights in px, `colours`, `dim`, `split`, `background` rules by cap
   height, `bars`, `flat`, `box`, `neighbours`), `render` (supersampling, tracking, pitch, opacity, blur, noise,
   JPEG, the crop's margins). Text specs and their template functions: `rec/texts.py`.
-- `train`: `data` (`path` or `@synth`, `repeat`), `epochs`, `lr`, `weight_decay`, `batch`, `workers`, `train_bn`,
+- `train`: `data` (`path` or `@synth`, `repeat`), `epochs`, `lr`, `weight_decay`, `batch`, `train_bn`,
   `clip`, `warmup`, `select` (`last` or `best` by the sum of the monitored CERs), `monitor` (eval sets or
   `@synth-val`, `limit`, `seed`).
 - `eval`: `sets` (name → `path`, `group_by`, `subsets` name → substring), `normalize`, `headline`, `baseline`.
+- `resources`, the machine, not the model (defaults in `common/recipe.py` `RESOURCES`; per machine
+  `--set resources.<key>=<value>`): `device` (`auto`, `cuda`, `cuda:<n>`, `cpu`), `memory_fraction` (the share of the
+  GPU memory PyTorch may take: without it the cache outgrows a 16 GB GPU and Windows spills into RAM, ~4x slower),
+  `workers`, `pin_memory`, `synth_workers`, `eval_threads`, `eval_batch`.
 
 **`nanodet`** (`recipes/sc-warehouse-layout.yml`): `data` (the COCO folder), `arch` (`layout/<arch>.yml`),
 `input` (`width`, `height`), `classes`, `normalize` (`mean`, `std` in BGR, 0–255), `train` (`nanodet` checkout,
-`epochs`, `schedule_epochs` (the cosine's length), `val_interval`, `checkpoint`, `batch`, `workers`, `lr`,
+`epochs`, `schedule_epochs` (the cosine's length), `val_interval`, `checkpoint`, `batch`, `lr`,
 `weight_decay`, `warmup_steps`, `seed`, `augment` (NanoDet's pipeline keys)), `decode` (`score`, `nms`: into
-`model.toml`), `eval` (`split`, `iou`, `threads`), `shots` (`height`, `area`, `overlap`).
+`model.toml`), `eval` (`split`, `iou`), `resources` (`device`, `workers`, `eval_threads`), `shots` (`height`, `area`,
+`overlap`).
 
 ## A new reader (e.g. the mining HUD)
 

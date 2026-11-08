@@ -110,7 +110,7 @@ def evaluate(recipe, read, charset: M.Charset, inp: M.Input, sets: list[str] | N
         if sets and name not in sets:
             continue
         rows = rows_of(recipe.path(spec["path"]), charset, normalize)
-        reads = [t for t, _ in run(read, rows, inp)]
+        reads = [t for t, _ in run(read, rows, inp, recipe.resource("eval_batch"))]
         out[name] = report(rows, reads, spec, normalize)
         print(f"{name}:\n{show(out[name])}", flush=True)
     return out

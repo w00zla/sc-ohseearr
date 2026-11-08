@@ -1,10 +1,11 @@
 """Fine-tunes the recognizer (PyTorch, CTC) on line datasets.
 
 Recipe keys under `train`: `data` (a list of {path, repeat}; `@synth` = the run's synthetic set), `epochs`,
-`lr`, `weight_decay`, `batch`, `workers`, `train_bn` (false: BatchNorm statistics and weights stay as
+`lr`, `weight_decay`, `batch`, `train_bn` (false: BatchNorm statistics and weights stay as
 pre-trained), `clip`, `warmup` (epochs of linear warm-up), `select` (`last`, or `best`: the lowest sum of the
 monitored sets' CER), `monitor` (a list of {set, limit, seed}: eval sets measured after every epoch; `@synth-val`
-= the run's synthetic validation set). Writes `<run>/train/{last,best}.pt` and `log.json`.
+= the run's synthetic validation set). Under `resources` (common/recipe.py `RESOURCES`): `device`,
+`memory_fraction`, `workers`, `pin_memory`, `eval_batch`. Writes `<run>/train/{last,best}.pt` and `log.json`.
 """
 import json
 import math
@@ -58,6 +59,15 @@ class Collate:
         return x, targets, lengths
 
 
+def torch_device(setting: str) -> str:
+    """The `resources.device` setting as a torch device: `auto` is CUDA when available, else the CPU."""
+    if setting == "auto":
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    if setting.startswith("cuda") and not torch.cuda.is_available():
+        raise RuntimeError(f"resources.device {setting}: CUDA is not available")
+    return setting
+
+
 def freeze_bn(model):
     for m in model.modules():
         if isinstance(m, (torch.nn.BatchNorm1d, torch.nn.BatchNorm2d)):
@@ -72,12 +82,20 @@ def train(recipe, model: torch.nn.Module, charset: M.Charset, inp: M.Input, data
     t = recipe.get("train")
     normalize = recipe.get("eval.normalize", {})
     os.makedirs(out, exist_ok=True)
-    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    dev = torch_device(recipe.resource("device"))
+    fraction = recipe.resource("memory_fraction")
+    if dev.startswith("cuda") and fraction:
+        # The batches' widths vary, so PyTorch's cache keeps a block per shape and outgrows the GPU: on Windows the
+        # driver then moves memory to system RAM and training gets ~4x slower. With a limit it frees its cache first.
+        torch.cuda.set_per_process_memory_fraction(fraction, torch.device(dev).index)  # None: the current GPU
     model.to(dev)
+    print(f"device {dev}" + (f", GPU memory up to {fraction:.0%}" if dev.startswith("cuda") and fraction else ""),
+          flush=True)
 
+    workers, eval_batch = recipe.resource("workers"), recipe.resource("eval_batch")
     loader = DataLoader(Lines(items_of(data, charset, normalize), inp), batch_size=t["batch"], shuffle=True,
-                        num_workers=t["workers"], collate_fn=Collate(inp), drop_last=True,
-                        persistent_workers=t["workers"] > 0)
+                        num_workers=workers, collate_fn=Collate(inp), drop_last=True,
+                        persistent_workers=workers > 0, pin_memory=recipe.resource("pin_memory"))
     opt = torch.optim.AdamW(list(model.parameters()), lr=t["lr"], weight_decay=t["weight_decay"])
     steps = t["epochs"] * len(loader)
     warm = max(1, int(len(loader) * t.get("warmup", 0.5)))
@@ -90,7 +108,7 @@ def train(recipe, model: torch.nn.Module, charset: M.Charset, inp: M.Input, data
         read = ev.torch_reader(model, charset, inp, dev)
         res = {}
         for name, rows, spec in monitor:
-            res[name] = ev.report(rows, [x for x, _ in ev.run(read, rows, inp)], spec, normalize)
+            res[name] = ev.report(rows, [x for x, _ in ev.run(read, rows, inp, eval_batch)], spec, normalize)
         return res
 
     def show(res):

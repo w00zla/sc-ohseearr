@@ -70,7 +70,7 @@ def cmd_run(recipe: Recipe, a):
         done("backgrounds")
     if step("synth") and synth_cfg:
         from . import render
-        workers = synth_cfg.get("workers") or max(1, (os.cpu_count() or 2) - 2)
+        workers = recipe.resource("synth_workers") or max(1, (os.cpu_count() or 2) - 2)
         cs = set(charset.chars) | {" "}
         for sub, n, seed in (("synth", synth_cfg["count"], synth_cfg["seed"]),
                              ("synth-val", synth_cfg["val_count"], synth_cfg["val_seed"])):
@@ -105,11 +105,11 @@ def cmd_run(recipe: Recipe, a):
         done("export")
     model_path = a.model or f"{out}/model.onnx"
     if step("eval"):
-        res = ev.evaluate(recipe, ev.onnx_reader(model_path, charset, inp), charset, inp)
+        res = ev.evaluate(recipe, ev.onnx_reader(model_path, charset, inp, recipe.resource("eval_threads")), charset, inp)
         base = None
         if recipe.get("eval.baseline", False):
             print("baseline (cut model):", flush=True)
-            base = ev.evaluate(recipe, ev.onnx_reader(cut_model, charset, inp), charset, inp)
+            base = ev.evaluate(recipe, ev.onnx_reader(cut_model, charset, inp, recipe.resource("eval_threads")), charset, inp)
         with open(f"{out}/eval.json", "w", encoding="utf-8") as f:
             json.dump({"model": res, "baseline": base}, f, indent=1)
         done("eval")
@@ -143,7 +143,7 @@ def cmd_eval(recipe, a):
     charset = M.Charset.load(a.dict or f"{os.path.dirname(os.path.abspath(a.model))}/dict.txt")
     inp = input_of(recipe)
     t0 = time.time()
-    res = ev.evaluate(recipe, ev.onnx_reader(a.model, charset, inp), charset, inp, a.sets.split(",") if a.sets else None)
+    res = ev.evaluate(recipe, ev.onnx_reader(a.model, charset, inp, recipe.resource("eval_threads")), charset, inp, a.sets.split(",") if a.sets else None)
     print(f"({time.time() - t0:.0f} s)")
     if a.json:
         with open(a.json, "w", encoding="utf-8") as f:

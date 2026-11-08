@@ -36,6 +36,16 @@ COMMANDS = ["run", "eval", "labels", "errors", "shots"]
 HERE = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
 
 
+def gpu_ids(device: str) -> list[int]:
+    """NanoDet's `gpu_ids` for `resources.device`: auto and cuda the first GPU, cuda:<n> that one. NanoDet's training
+    here runs on a GPU only."""
+    if device in ("auto", "cuda"):
+        return [0]
+    if device.startswith("cuda:"):
+        return [int(device.split(":", 1)[1])]
+    raise ValueError(f"resources.device {device}: the layout training needs a GPU (auto, cuda, cuda:<n>)")
+
+
 def config(recipe: Recipe, out: str) -> dict:
     """The NanoDet config: the architecture template with the recipe's classes, input, data and schedule."""
     with open(f"{HERE}/{recipe.get('arch')}.yml", encoding="utf-8") as f:
@@ -53,7 +63,8 @@ def config(recipe: Recipe, out: str) -> dict:
         d = cfg["data"][split]
         d["img_path"], d["ann_path"], d["input_size"] = f"{data}/{split}", f"{data}/{split}.json", size
         d["pipeline"] = dict(t.get("augment", {}), normalize=norm) if split == "train" else {"normalize": norm}
-    cfg["device"]["workers_per_gpu"] = t["workers"]
+    cfg["device"]["gpu_ids"] = gpu_ids(recipe.resource("device"))
+    cfg["device"]["workers_per_gpu"] = recipe.resource("workers")
     cfg["device"]["batchsize_per_gpu"] = t["batch"]
     s = cfg["schedule"]
     s["optimizer"]["lr"], s["optimizer"]["weight_decay"] = t["lr"], t["weight_decay"]
@@ -102,7 +113,7 @@ def cmd_run(recipe: Recipe, a):
         with open(f"{stage}/model.toml", "w", encoding="utf-8", newline="\n") as f:
             f.write(pkg.manifest(pkg.head(recipe), sections(recipe, cfg_path)))
     if "eval" in steps:
-        threads, thr = recipe.get("eval.threads", 3), recipe.get("eval.iou", 0.5)
+        threads, thr = recipe.resource("eval_threads"), recipe.get("eval.iou", 0.5)
         res = ev.evaluate(ev.Package(f"{out}/package", threads, model), recipe.path(recipe.get("data")),
                           recipe.get("eval.split", "val"), thr)
         print(ev.show(res, threads), flush=True)
@@ -119,7 +130,7 @@ def cmd_run(recipe: Recipe, a):
                             "without_labels": len({i["id"] for i in c["images"]} - {x["image_id"] for x in c["annotations"]})}
         d = pkg.write(f"{out}/package", recipe, sections(recipe, cfg_path), {"model.onnx": model},
                       {"eval": res, "data": sizes},
-                      ev.markdown(res, recipe.get("eval.iou", 0.5), recipe.get("eval.threads", 3)))
+                      ev.markdown(res, recipe.get("eval.iou", 0.5), recipe.resource("eval_threads")))
         print(f"package: {d}", flush=True)
     print(f"timings (s): {json.dumps(timings)}, total {time.time() - t_all:.0f} s", flush=True)
 
@@ -136,7 +147,7 @@ def sections(recipe: Recipe, cfg_path: str) -> dict:
 
 def cmd_eval(recipe, a):
     from . import evaluate as ev
-    threads, thr = recipe.get("eval.threads", 3), recipe.get("eval.iou", 0.5)
+    threads, thr = recipe.resource("eval_threads"), recipe.get("eval.iou", 0.5)
     res = ev.evaluate(ev.Package(a.package, threads), recipe.path(recipe.get("data")), a.split, thr)
     print(ev.show(res, threads))
     if a.json:

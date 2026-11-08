@@ -36,7 +36,6 @@ synth:
   seed: 2
   val_count: 5000
   val_seed: 3
-  workers: null            # default: CPU count - 2
   packs:
     en: ${SC_GLOBAL_INI}
     de: localization/sc-deutsch/global.ini
@@ -311,6 +310,16 @@ synth:
       right: {gauss: [0.32, 0.1], clip: [0.05, 0.6]}
       descender_chars: "gjpqy(),;[]{}|Qµ"
 
+# The machine, not the model (override per machine: --set resources.<key>=<value>)
+resources:
+  device: auto                 # auto (CUDA when available), cuda, cuda:<n>, cpu
+  memory_fraction: 0.85        # the varying widths make PyTorch's cache outgrow 16 GB (spilled into RAM, ~4x slower)
+  workers: 4                   # data loader processes
+  pin_memory: false
+  synth_workers: null          # rendering processes (null: CPU count - 2)
+  eval_threads: 0              # ONNX Runtime threads of the evaluation (0: all cores)
+  eval_batch: 32
+
 train:
   data:
     - {path: "@synth"}
@@ -319,7 +328,6 @@ train:
   lr: 1.0e-4
   weight_decay: 1.0e-4
   batch: 128
-  workers: 4
   train_bn: false
   clip: 5.0
   warmup: 0.5                  # epochs
@@ -328,6 +336,7 @@ train:
     - {set: gear, limit: 3000, seed: 123}
     - {set: "@synth-val", limit: 2000}
     - {set: teacher}
+    - {set: refinery}
 
 eval:
   headline: gear
@@ -336,3 +345,4 @@ eval:
   sets:
     gear: {path: ocr-eval, group_by: source, subsets: {"&": "&"}}    # 21,881 real gear tooltip lines (labels: label.ts)
     teacher: {path: ocr-eval-teacher}                                 # warehouse recording …6994 and the refinery test frames
+    refinery: {path: ocr-eval-refinery, group_by: set}               # 1,232 refinery numbers of the 2026-11-08 recordings (3840×1600, 1080p), true values

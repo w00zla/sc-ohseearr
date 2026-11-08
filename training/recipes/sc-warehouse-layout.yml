@@ -28,7 +28,6 @@ train:
   val_interval: 10
   checkpoint: best                   # by the validation mAP at the val intervals (or: last)
   batch: 32
-  workers: 4                         # NanoDet starts its workers anew every epoch (~1 min with 10 on Windows)
   lr: 0.001
   weight_decay: 0.05
   warmup_steps: 300
@@ -47,7 +46,13 @@ train:
 
 decode: {score: 0.35, nms: 0.5}
 
-eval: {split: val, iou: 0.5, threads: 3}
+eval: {split: val, iou: 0.5}
+
+# The machine, not the model (override per machine: --set resources.<key>=<value>)
+resources:
+  device: auto                       # auto or cuda: the first GPU; cuda:<n>
+  workers: 4                         # NanoDet starts its workers anew every epoch (~1 min with 10 on Windows)
+  eval_threads: 3                    # ONNX Runtime threads of the evaluation: its CPU time per window goes into MODEL.md
 
 # `shots`: frames scaled to this height, windows over this area (fractions x0, y0, x1, y1): the warehouse pane
 shots: {height: 720, area: [0.45, 0.25, 1.0, 0.95], overlap: 40}

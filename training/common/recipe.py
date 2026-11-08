@@ -13,6 +13,18 @@ import yaml
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).replace("\\", "/")
 _MISSING = object()
 
+# The machine, not the model: what changes speed and memory but not what is trained. A recipe's `resources` section
+# sets them; override them per machine with `--set resources.<key>=<value>`.
+RESOURCES = {
+    "device": "auto",          # auto (CUDA when available, else the CPU), cuda, cuda:<n>, cpu
+    "memory_fraction": None,   # the share of the GPU memory PyTorch may take (None: no limit)
+    "workers": 4,              # data loader processes of the training
+    "pin_memory": False,       # page-locked batches for faster copies to the GPU
+    "synth_workers": None,     # processes rendering synthetic lines (None: CPU count - 2)
+    "eval_threads": 0,         # ONNX Runtime threads of the evaluation (0: all cores)
+    "eval_batch": 32,          # lines per recognizer run in the evaluation and the monitored sets
+}
+
 
 def default_data_root() -> str:
     return (os.environ.get("SC_OHSEEARR_DATA") or f"{REPO}/local").replace("\\", "/")
@@ -36,6 +48,12 @@ class Recipe:
         for p in parts[:-1]:
             node = node.setdefault(p, {})
         node[parts[-1]] = value
+
+    def resource(self, key: str):
+        """A `resources` value of the recipe, else its default (`RESOURCES`)."""
+        if key not in RESOURCES:
+            raise KeyError(f"recipe {self.id}: unknown resource {key}")
+        return self.get(f"resources.{key}", RESOURCES[key])
 
     def get(self, dotted: str, default=_MISSING):
         node = self.raw

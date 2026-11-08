@@ -1,5 +1,5 @@
 """Measures a layout detector (a `nanodet` model package) on a COCO split: hits per class against the labels
-(IoU ≥ `eval.iou`, default 0.5; recall and precision) and the time per run on the CPU (`eval.threads`).
+(IoU ≥ `eval.iou`, default 0.5; recall and precision) and the time per run on the CPU (`resources.eval_threads`).
 The model's numbers (normalization, strides, bins, classes, score, NMS) come from its model.toml."""
 import os
 import time
