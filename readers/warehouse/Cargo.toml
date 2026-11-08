@@ -9,12 +9,12 @@ repository.workspace = true
 [dependencies]
 sc-ohseearr-core = { workspace = true }
 sc-ohseearr-sc = { workspace = true }
-sc-ohseearr-model-sc-warehouse-layout = { path = "../../models/sc-warehouse-layout" }
 image = { workspace = true }
 serde = { workspace = true }
 
 [dev-dependencies]
 sc-ohseearr-test-support = { path = "../../crates/test-support" }
+sc-ohseearr-model-sc-warehouse-layout = { path = "../../models/sc-warehouse-layout" }
 image = { workspace = true, features = ["jpeg", "png"] }
 serde_json = "1"
 

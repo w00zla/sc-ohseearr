@@ -48,7 +48,7 @@ A git dependency (no crates.io), pinned by a release tag or a revision. Every cr
 sc-ohseearr-core = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }  # features = ["directml"] for the GPU
 sc-ohseearr-model-paddle-det-tiny = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
 sc-ohseearr-model-sc-rec-latin = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
-sc-ohseearr-model-sc-warehouse-layout = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }  # only to use it directly
+sc-ohseearr-model-sc-warehouse-layout = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
 # The game: texts, parsers, the reader interface; the readers
 sc-ohseearr-sc = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
 sc-ohseearr-warehouse = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
@@ -86,17 +86,21 @@ Everything together, the game window read live by all readers:
 ```rust
 use std::path::Path;
 use sc_ohseearr_capture_win::{WindowCapture, set_per_monitor_dpi_aware};
-use sc_ohseearr_core::Ocr;
+use sc_ohseearr_core::{NanoDet, Ocr};
 use sc_ohseearr_gear_inventory::GearInventoryReader;
 use sc_ohseearr_refinery::RefineryReader;
 use sc_ohseearr_sc::{Frame, LocTable, Locale, Reader};
 use sc_ohseearr_warehouse::WarehouseReader;
 
-let mut ocr = Ocr::new(&sc_ohseearr_model_paddle_det_tiny::package(), &sc_ohseearr_model_sc_rec_latin::package(), 3, false)?;
+// The models, all on the same threads and device: the OCR (detector, recognizer) and the warehouse layout detector
+let (threads, gpu) = (3, false);
+let mut ocr = Ocr::new(&sc_ohseearr_model_paddle_det_tiny::package(), &sc_ohseearr_model_sc_rec_latin::package(), threads, gpu)?;
+let layout = NanoDet::new(&sc_ohseearr_model_sc_warehouse_layout::package(), threads, gpu)?;
 // The game's texts: the player's language pack (if any) first, then the English table
 let locale = Locale::new(None, Some(LocTable::load(Path::new("global-english.ini"))?))?;
-// Each reader keeps its own state across frames (the warehouse its layout, with its own model)
-let (mut warehouse, mut gear, mut refinery) = (WarehouseReader::new(), GearInventoryReader::new(), RefineryReader::new());
+// The readers; each keeps its own state across frames (the warehouse reader its last layout)
+let mut warehouse = WarehouseReader::new(layout)?;
+let (mut gear, mut refinery) = (GearInventoryReader::new(), RefineryReader::new());
 
 set_per_monitor_dpi_aware()?;                                  // once, before any window exists
 let mut capture = WindowCapture::new("StarCitizen.exe");

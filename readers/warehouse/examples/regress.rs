@@ -11,6 +11,7 @@
 //! over to the next frames, `reset` at each folder. Diagnostics are on (every tile's badge read), as in the
 //! companion's `inventory_dump` and its debug window. The lines go to stdout (the timing to stderr):
 //! `{"frame", "cursor", "output", "diagnostics"}`; `frame` is `<folder>/<file stem>`.
+use sc_ohseearr_core::NanoDet;
 use sc_ohseearr_sc::{Frame, Reader};
 use sc_ohseearr_test_support::{Args, cursor_of, frames};
 use sc_ohseearr_warehouse::WarehouseReader;
@@ -19,7 +20,10 @@ fn main() {
     let args = Args::parse();
     let folders = args.folders(env!("CARGO_MANIFEST_DIR"));
     let mut ocr = args.ocr();
-    let mut reader = WarehouseReader::new();
+    // The layout detector on the same threads and device as the OCR
+    let layout =
+        NanoDet::new(&sc_ohseearr_model_sc_warehouse_layout::package(), args.threads, args.gpu).expect("layout model");
+    let mut reader = WarehouseReader::new(layout).expect("layout model");
     reader.set_diagnostics(true);
     let (mut read, mut total_ms) = (0u128, 0u128);
     let mut id = 0u64;

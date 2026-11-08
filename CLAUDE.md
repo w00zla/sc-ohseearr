@@ -31,6 +31,8 @@ here that could move results.
 - **No compiled-in game texts**: readers anchor on loc keys and get texts from `Frame::locale` (ADR 0007); test fixtures
   may hold the few keys a test needs.
 - **Readers' output is neutral** (ADR 0006, 0010): what the game shows, typed; diagnostics separate.
+- **KISS and explicit** (ADR 0017): no hidden shortcuts (a reader building its own model, lazy rebuilds on changed
+  terms); the app makes every model and passes it in. A little more boilerplate beats logic nobody checks.
 - **Results must not change silently**: a change to the engine, a model or a reader keeps the consumer's regression
   dumps identical, or the difference is shown to and accepted by the user.
 - `ort` stays pinned (`=2.0.0-rc.13`); `rustfmt.toml` (max width 120) applies; clippy clean.

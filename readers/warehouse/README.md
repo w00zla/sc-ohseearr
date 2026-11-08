@@ -10,12 +10,15 @@ Reader card: the freight manager's warehouse reader.
 | Game version | SC 4.x (screenshots and recordings of 2026-10-18 to 2026-10-30) |
 | Verified resolutions | 3840×1600 and 1920×1080 (pitch 0.10–0.20 of the frame's height) |
 | Read time | Recordings of 2026-10-30 with every tile's badge read (diagnostics on): 26 ms per read at 3840×1600, 25 ms at 1080p on the CPU (3 threads), 24 ms on the GPU; the layout detector ~4 ms of it, the rest the recognizer. The regression set here: 22 ms per read (740 frames, 3 threads, 2026-11-06). The detector over the whole pane (the first read, no prior) takes 6 windows at 3840×1600 |
-| Models | `sc-warehouse-layout` (NanoDet-Plus, owned by the reader, made on first use on the `Ocr`'s threads and device); the `Ocr`'s recognizer (`sc-rec-latin`; the badges with the characters "Xx× 0123456789" only). The `Ocr`'s text detector is not used |
+| Models | the layout detector it is given (`sc-warehouse-layout`, NanoDet-Plus; the app makes it like its `Ocr`, on the same threads and device); the `Ocr`'s recognizer (`sc-rec-latin`; the badges with the characters "Xx× 0123456789" only). The `Ocr`'s text detector is not used |
 | Needs | `Frame::cursor` for the hovered tile (without one: the tile with the chip's quality or whose quality the tooltip hides, else the one under the tooltip's cursor point; every tile's quality is read then); `Frame::locale` only to resolve the name to loc keys |
 | Does not read | Which item or material a name is (loc keys only); the scroll offset (rows count from the top of the frame); the elevator pane on the left |
 
 ## API
 
+- `WarehouseReader::new(detector)`: the layout detector, made by the app:
+  `NanoDet::new(&sc_ohseearr_model_sc_warehouse_layout::package(), threads, gpu)`; an error when it has a class
+  the read does not know.
 - `WarehouseReader`: `Reader` with `Output = Warehouse`, `Diagnostics = WarehouseDiagnostics`.
   - `probe`: the whole read; true when a grid is fitted. Kept for `read` of the same `Frame::id`.
   - `read`: the grid and the tooltip. A fit with weight ≥ `STRONG_FIT_WEIGHT` becomes the prior (`prior()`).

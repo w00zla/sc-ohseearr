@@ -127,40 +127,29 @@ impl Layout {
     }
 }
 
-/// The layout detector with its classes as kinds, and the terms it was made on.
-struct LayoutModel {
-    detector: NanoDet,
-    kinds: Vec<read::Kind>,
-    threads: usize,
-    gpu: bool,
-}
-
-impl LayoutModel {
-    fn new(threads: usize, gpu: bool) -> Result<Self, Error> {
-        let detector = NanoDet::new(&sc_ohseearr_model_sc_warehouse_layout::package(), threads, gpu)?;
-        let kinds = detector
-            .classes()
-            .iter()
-            .map(|c| read::Kind::of_class(c).ok_or_else(|| Error::Mismatch(format!("layout model: unknown class {c}"))))
-            .collect::<Result<_, _>>()?;
-        Ok(Self { detector, kinds, threads, gpu })
-    }
-}
-
-/// The warehouse reader. It keeps the last strong fit's layout across frames (`reset` drops it) and makes its
-/// layout detector on first use, on the terms of the `Ocr` it is given (threads, GPU; made again when they
-/// change). Drop the reader to free the detector's memory.
-#[derive(Default)]
+/// The warehouse reader. It reads with the layout detector it is given and the `Ocr` of each call, and keeps the
+/// last strong fit's layout across frames (`reset` drops it). Drop the reader to free the detector's memory.
 pub struct WarehouseReader {
-    model: Option<LayoutModel>,
+    /// The layout detector (`sc-warehouse-layout` or a model trained like it)
+    detector: NanoDet,
+    /// Its classes as the read's kinds, in the detector's class order
+    kinds: Vec<read::Kind>,
     prior: Option<Layout>,
     diagnostics: bool,
     cache: Option<(u64, Reading<Warehouse, WarehouseDiagnostics>)>,
 }
 
 impl WarehouseReader {
-    pub fn new() -> Self {
-        Self::default()
+    /// A reader with this layout detector, made by the app like its `Ocr`:
+    /// `NanoDet::new(&sc_ohseearr_model_sc_warehouse_layout::package(), threads, gpu)`. Fails when the detector has
+    /// a class the read does not know.
+    pub fn new(detector: NanoDet) -> Result<Self, Error> {
+        let kinds = detector
+            .classes()
+            .iter()
+            .map(|c| read::Kind::of_class(c).ok_or_else(|| Error::Mismatch(format!("layout model: unknown class {c}"))))
+            .collect::<Result<_, _>>()?;
+        Ok(Self { detector, kinds, prior: None, diagnostics: false, cache: None })
     }
 
     /// The layout the next read starts from (the last fit with weight ≥ `STRONG_FIT_WEIGHT`).
@@ -170,7 +159,7 @@ impl WarehouseReader {
 
     /// The layout detector's timings since the last call (and starts over); the `Ocr` keeps its own.
     pub fn take_timings(&mut self) -> Timings {
-        self.model.as_mut().map(|m| m.detector.take_timings()).unwrap_or_default()
+        self.detector.take_timings()
     }
 
     /// The frame's reading, read once per frame id.
@@ -180,13 +169,8 @@ impl WarehouseReader {
         frame: &Frame,
     ) -> Result<&Reading<Warehouse, WarehouseDiagnostics>, ReadError> {
         if !self.cache.as_ref().is_some_and(|(id, _)| *id == frame.id) {
-            let (threads, gpu) = (ocr.threads(), ocr.gpu());
-            if !self.model.as_ref().is_some_and(|m| m.threads == threads && m.gpu == gpu) {
-                self.model = Some(LayoutModel::new(threads, gpu)?);
-            }
-            let model = self.model.as_mut().expect("made above");
             let (output, diagnostics) =
-                read::read_grid(ocr, &mut model.detector, &model.kinds, frame, self.prior.as_ref(), self.diagnostics)?;
+                read::read_grid(ocr, &mut self.detector, &self.kinds, frame, self.prior.as_ref(), self.diagnostics)?;
             // Only a strong fit sets the layout the weaker reads keep
             if let Some(l) = &diagnostics.layout
                 && l.weight >= STRONG_FIT_WEIGHT
@@ -232,8 +216,9 @@ impl Reader for WarehouseReader {
 #[cfg(test)]
 mod screenshots {
     use super::*;
+    use sc_ohseearr_core::NanoDet;
     use sc_ohseearr_sc::norm;
-    use sc_ohseearr_test_support::{data_root, frames, test_ocr};
+    use sc_ohseearr_test_support::{TEST_THREADS, data_root, frames, test_ocr};
     use std::path::PathBuf;
 
     fn shots(dir: &str) -> Vec<PathBuf> {
@@ -248,7 +233,8 @@ mod screenshots {
             return;
         }
         let mut ocr = test_ocr();
-        let mut reader = WarehouseReader::new();
+        let layout = NanoDet::new(&sc_ohseearr_model_sc_warehouse_layout::package(), TEST_THREADS, false).unwrap();
+        let mut reader = WarehouseReader::new(layout).unwrap();
         // Checked against the shots: the tooltip name's start, its quality chip and SCU, the hovered tile's count.
         // Ship components are not booked from the warehouse, and tiny misreads their names ("Mil/3/A Blizard",
         // "Mil/A VK-00"): only their start is checked
