@@ -193,7 +193,8 @@ scripts/extract-global-ini.ps1 -StarBreaker <starbreaker.exe> -P4k <install>/LIV
 ## Development
 
 ```sh
-cargo test --release --workspace                  # tests on local data skip what is missing
+git submodule update --init                       # the readers' test frames (fixtures/)
+cargo test --release --workspace
 cargo run --release --example ocr_dump -- <image> [max_height] [threads] [--det <dir>] [--rec <dir>] [--gpu]
 cargo run --release --example layout_dump -- <image> [x y w h]
 cargo run --release -p sc-ohseearr-refinery --example regress-refinery -- --english <global.ini>   # likewise regress-warehouse, regress-gear-inventory
@@ -201,24 +202,27 @@ cargo run --release -p sc-ohseearr-refinery --example regress-refinery -- --engl
 
 - `examples/tests/models.rs` runs every model package on a synthetic image and checks its outputs against the
   manifest (no data needed).
+- The readers' tests read single frames of debug recordings from the submodule `fixtures/` (the repository
+  [sc-ohseearr-fixtures](https://github.com/w00zla/sc-ohseearr-fixtures)) and fail when it is not checked out.
 - Each reader's `regress` example prints its output per frame over its regression set: compare the lines before and
   after a change. Results must not change silently.
 - Training: [`training/README.md`](training/README.md) (setup, the fonts and language files you provide, recipes).
 
-**Data root.** Local data stays out of git: `$SC_OHSEEARR_DATA`, else `local/` in the checkout (gitignored). The tests,
-the `regress` examples (`--data <root>`) and the training pipelines (`--data-root <dir>`) read from it:
+**Data root.** Local data stays out of git: `$SC_OHSEEARR_DATA`, else `local/` in the checkout (gitignored). The
+`regress` examples (`--data <root>`) and the training pipelines (`--data-root <dir>`) read from it:
 
 | Folder | What |
 |---|---|
 | `regression/<reader>/<set>/` | the regression sets: debug recordings the readers' `regression.toml` list |
 | `sources/<set>/` | the training sources: recordings and screenshots the recipes and `training/tools/` read |
 | `training/<id>/` | training runs |
-| `screenshots/`, `stock_scan_debug/` | scratch for analysis and prototyping, never a regression set or a training source (the readers' screenshot tests read `screenshots/`) |
+| `screenshots/`, `stock_scan_debug/` | scratch for analysis and prototyping, never a regression set, a training source or a test frame |
 
 ## Game data and fan content
 
-The repository holds game data only as small excerpts a test concretely needs (a few loc keys, single crops or
-frames, each with its source noted), never whole game files, fonts or recordings. The readers take the game's texts
+The repository holds game data only as small excerpts a test concretely needs (a few loc keys, each with its source
+noted), never whole game files, fonts or recordings; the readers' test frames live in the separate repository
+sc-ohseearr-fixtures. The readers take the game's texts
 from your own installation; training uses data from your own copy of the game.
 
 sc-ohseearr is an unofficial Star Citizen fan project, not endorsed by or affiliated with the Cloud Imperium group of

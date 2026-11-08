@@ -344,5 +344,5 @@ eval:
   normalize: {"μ": "µ"}
   sets:
     gear: {path: ocr-eval, group_by: source, subsets: {"&": "&"}}    # 21,881 real gear tooltip lines (labels: label.ts)
-    teacher: {path: ocr-eval-teacher}                                 # warehouse recording …6994 and the refinery test frames
+    teacher: {path: ocr-eval-teacher}                                 # warehouse recording …6994 and the held-out refinery frames
     refinery: {path: ocr-eval-refinery, group_by: set}               # 1,232 refinery numbers of the 2026-11-08 recordings (3840×1600, 1080p), true values

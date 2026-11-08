@@ -37,9 +37,9 @@ cargo test -p sc-ohseearr-gear-inventory --release
 cargo clippy -p sc-ohseearr-gear-inventory --release --all-targets
 ```
 
-The screenshot tests read `screenshots/inventory 3` and `screenshots/inventory 4` below the
-[data root](../../README.md#data-root) and are skipped silently when absent; run with `-- --nocapture` to see that
-they ran (each prints its read).
+The frame tests read six frames of debug recordings from the submodule `fixtures/gear-inventory` (3840×1600 and
+1920×1080, with their cursors) and check title, stat lines, page and the hovered tile's span; they fail when the
+submodule is not checked out (`git submodule update --init`).
 
 ## Regression
 

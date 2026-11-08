@@ -41,5 +41,7 @@ relative to the [data root](../../README.md#data-root); `--threads` defaults to 
 cargo run --release -p sc-ohseearr-refinery --example regress-refinery -- --english <global.ini> [--pack <global.ini>] [--diagnostics] [--data <root>] [--threads n] [--gpu] [folder...]   # threads default 3
 ```
 
-`cargo test -p sc-ohseearr-refinery --release` also runs the screenshot tests over `refinery flow`, `… 2`, `… 3`
-under the data root (skipped silently when absent), with a small test ini holding just the 10 keys.
+`cargo test -p sc-ohseearr-refinery --release` also runs the frame tests over seven frames of debug recordings in the
+submodule `fixtures/refinery` (3840×1600 and 1920×1080: no terminal, the terminal without the overview, work orders
+completed and running), with a small test ini holding just the 10 keys; they fail when the submodule is not checked
+out (`git submodule update --init`).

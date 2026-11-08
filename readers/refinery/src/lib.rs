@@ -422,31 +422,31 @@ refinery_ui_workordercard_title_completed=Completed
         );
     }
 
-    // The user's screenshots (the data folder, not in git) against what the terminal shows; skipped without them.
+    // Frames of debug recordings (the submodule fixtures/, ADR 0021) against what the terminal shows, checked by hand.
     // Slow in debug builds: cargo test --release.
-    mod screenshots {
+    mod frames {
         use super::*;
-        use sc_ohseearr_test_support::{screenshots, shot as frame, test_ocr};
-        use std::path::{Path, PathBuf};
+        use sc_ohseearr_test_support::{fixture, test_ocr};
 
         const STATION: &str = "CRU-L1 AMBITIOUS DREAM STATION";
 
-        fn setup(folder: &str) -> Option<(Ocr, PathBuf)> {
-            let dir = screenshots(folder)?;
-            Some((test_ocr(), dir))
-        }
-
-        fn read(ocr: &mut Ocr, dir: &Path, suffix: &str) -> Option<Refinery> {
+        fn read(ocr: &mut Ocr, name: &str) -> Refinery {
             let en = english();
-            let image = frame(dir, suffix);
+            let (image, _) = fixture("refinery", name);
             let f = Frame { id: 0, image: &image, cursor: None, locale: Some(&en) };
-            let r = RefineryReader::new().read(ocr, &f).unwrap().output;
-            (r.screen == Screen::Overview).then_some(r)
+            RefineryReader::new().read(ocr, &f).unwrap().output
         }
 
-        fn probe(ocr: &mut Ocr, dir: &Path, suffix: &str) -> bool {
+        fn overview(ocr: &mut Ocr, name: &str) -> Refinery {
+            let r = read(ocr, name);
+            assert_eq!(r.screen, Screen::Overview, "{name}");
+            assert_eq!(r.station.as_ref().map(|s| s.text.as_str()), Some(STATION), "{name}");
+            r
+        }
+
+        fn probe(ocr: &mut Ocr, name: &str) -> bool {
             let en = english();
-            let image = frame(dir, suffix);
+            let (image, _) = fixture("refinery", name);
             let f = Frame { id: 0, image: &image, cursor: None, locale: Some(&en) };
             RefineryReader::new().probe(ocr, &f).unwrap()
         }
@@ -457,119 +457,96 @@ refinery_ui_workordercard_title_completed=Completed
             o.rows.iter().map(|r| (r.material.text.as_str(), r.quality.value, r.yield_cscu.value)).collect()
         }
 
+        /// (status, time remaining in seconds, rows) per work order
+        fn orders(r: &Refinery) -> Vec<(Status, Option<u32>, Rows<'_>)> {
+            r.orders.iter().map(|o| (o.status, o.time_remaining.value, rows(o))).collect()
+        }
+
+        const DONE_1: [(&str, Option<u32>, Option<u32>); 4] = [
+            ("QUARTZ", Some(330), Some(264)),
+            ("QUARTZ", Some(641), Some(35)),
+            ("HEPHAESTANITE", Some(572), Some(24)),
+            ("SILICON", Some(510), Some(16)),
+        ];
+        const DONE_2: [(&str, Option<u32>, Option<u32>); 5] = [
+            ("QUARTZ", Some(330), Some(134)),
+            ("QUARTZ", Some(522), Some(19)),
+            ("HEPHAESTANITE", Some(572), Some(19)),
+            ("SILICON", Some(510), Some(1)),
+            ("SILICON", Some(782), Some(5)),
+        ];
+        const RUNNING_A: [(&str, Option<u32>, Option<u32>); 6] = [
+            ("TITANIUM", Some(516), Some(24)),
+            ("ASLARITE", Some(287), Some(3)),
+            ("ASLARITE", Some(575), Some(8)),
+            ("AGRICIUM", Some(346), Some(253)),
+            ("AGRICIUM", Some(667), Some(31)),
+            ("AGRICIUM", Some(852), Some(62)),
+        ];
+        const RUNNING_B: [(&str, Option<u32>, Option<u32>); 4] = [
+            ("QUARTZ", Some(330), Some(221)),
+            ("QUARTZ", Some(522), Some(90)),
+            ("HEPHAESTANITE", Some(572), Some(18)),
+            ("SILICON", Some(510), Some(25)),
+        ];
+        const RUNNING_C: [(&str, Option<u32>, Option<u32>); 5] = [
+            ("TITANIUM", Some(516), Some(14)),
+            ("ASLARITE", Some(575), Some(8)),
+            ("AGRICIUM", Some(346), Some(161)),
+            ("AGRICIUM", Some(588), Some(6)),
+            ("AGRICIUM", Some(667), Some(35)),
+        ];
+
         #[test]
-        fn the_running_job_and_no_overview_elsewhere() {
-            let Some((mut ocr, dir)) = setup("refinery flow") else { return };
-            let v = read(&mut ocr, &dir, "E87").expect("overview");
-            assert_eq!(v.station.as_ref().map(|s| s.text.as_str()), Some(STATION));
-            assert_eq!(v.orders.len(), 1);
-            assert_eq!(v.orders[0].status, Status::Processing);
-            assert_eq!(v.orders[0].time_remaining.value, Some(57 * 60 + 45));
+        fn no_terminal_and_the_terminal_without_overview() {
+            let mut ocr = test_ocr();
+            assert!(!probe(&mut ocr, "1794142372-read-0"));
+            assert_eq!(read(&mut ocr, "1794142372-read-0").screen, Screen::Nothing);
+            assert!(probe(&mut ocr, "1794147615-read-2"));
+            assert_eq!(read(&mut ocr, "1794147615-read-2").screen, Screen::Terminal);
+        }
+
+        #[test]
+        fn work_orders_at_3840x1600() {
+            let mut ocr = test_ocr();
+            let done = || vec![(Status::Completed, None, DONE_1.to_vec()), (Status::Completed, None, DONE_2.to_vec())];
+            assert!(probe(&mut ocr, "1794142372-read-10"));
+            assert_eq!(orders(&overview(&mut ocr, "1794142372-read-10")), done());
+            let mut with_running = done();
+            with_running.push((Status::Processing, Some(3600 + 38 * 60), RUNNING_A.to_vec()));
+            assert_eq!(orders(&overview(&mut ocr, "1794142372-read-15")), with_running);
+        }
+
+        #[test]
+        fn work_orders_at_1080p() {
+            let mut ocr = test_ocr();
             assert_eq!(
-                rows(&v.orders[0]),
+                orders(&overview(&mut ocr, "1794147615-read-4")),
                 vec![
-                    ("TITANIUM", Some(516), Some(9)),
-                    ("ASLARITE", Some(575), Some(8)),
-                    ("AGRICIUM", Some(346), Some(175)),
-                    ("AGRICIUM", Some(588), Some(19)),
-                    ("AGRICIUM", Some(667), Some(20)),
+                    (Status::Completed, None, DONE_2.to_vec()),
+                    (Status::Processing, Some(11 * 60 + 42), RUNNING_A.to_vec()),
+                    (Status::Processing, Some(32 * 60 + 56), RUNNING_B.to_vec()),
                 ]
             );
-            // The welcome screen, the terminal from the side and the quotes
-            for suffix in ["20D", "130", "05E", "0F4", "55D"] {
-                assert!(read(&mut ocr, &dir, suffix).is_none(), "{suffix}");
-            }
-        }
-
-        #[test]
-        fn the_cheap_check_finds_the_terminal() {
-            for (folder, suffixes) in [
-                ("refinery flow", &["20D", "E87", "0F4"][..]),
-                ("refinery flow 2", &["DC5", "2E4"]),
-                ("refinery flow 3", &["BB4", "575"]),
-            ] {
-                let Some((mut ocr, dir)) = setup(folder) else { return };
-                for suffix in suffixes {
-                    assert!(probe(&mut ocr, &dir, suffix), "{suffix}");
-                }
-            }
-            let Some((mut ocr, dir)) = setup("refinery flow") else { return };
-            // The terminal from the side: nothing readable
-            assert!(!probe(&mut ocr, &dir, "130"));
-        }
-
-        // Work order 2 started next to the finished work order 1 (right of it)
-        #[test]
-        fn running_work_order_next_to_a_finished_one() {
-            let Some((mut ocr, dir)) = setup("refinery flow 2") else { return };
-            let finished = vec![
-                ("TITANIUM", Some(516), Some(9)),
-                ("ASLARITE", Some(575), Some(8)),
-                ("AGRICIUM", Some(346), Some(175)),
-                ("AGRICIUM", Some(588), Some(19)),
-                ("AGRICIUM", Some(667), Some(20)),
-            ];
-            // Only the finished work order
-            for suffix in ["DC5", "DF8"] {
-                let v = read(&mut ocr, &dir, suffix).unwrap_or_else(|| panic!("{suffix}: no overview"));
-                assert_eq!(v.orders.len(), 1, "{suffix}");
-                assert_eq!(v.orders[0].status, Status::Completed, "{suffix}");
-                assert_eq!(rows(&v.orders[0]), finished, "{suffix}");
-            }
-            // Just accepted (a message over the panel), then the overview
-            for suffix in ["2E4", "7A5", "578"] {
-                let v = read(&mut ocr, &dir, suffix).unwrap_or_else(|| panic!("{suffix}: no overview"));
-                assert_eq!(v.station.as_ref().map(|s| s.text.as_str()), Some(STATION), "{suffix}");
-                let running: Vec<_> = v.orders.iter().filter(|o| o.status == Status::Processing).collect();
-                assert_eq!(running.len(), 1, "{suffix}");
-                assert_eq!(running[0].time_remaining.value, Some(4 * 3600 + 17 * 60), "{suffix}");
-                assert_eq!(
-                    rows(running[0]),
-                    vec![
-                        ("HEPHAESTANITE", Some(572), Some(91)),
-                        ("SILICON", Some(310), Some(540)),
-                        ("SILICON", Some(510), Some(105)),
-                    ],
-                    "{suffix}"
-                );
-            }
-        }
-
-        // Work order 3 started next to the still running work order 2
-        #[test]
-        fn two_running_work_orders() {
-            let Some((mut ocr, dir)) = setup("refinery flow 3") else { return };
-            // Just accepted (a message over the panel), then the overview
-            for suffix in ["84C", "F76", "575"] {
-                let v = read(&mut ocr, &dir, suffix).unwrap_or_else(|| panic!("{suffix}: no overview"));
-                let running: Vec<_> = v.orders.iter().filter(|o| o.status == Status::Processing).collect();
-                assert_eq!(
-                    running.iter().map(|o| rows(o)).collect::<Vec<_>>(),
-                    vec![
-                        vec![
-                            ("HEPHAESTANITE", Some(572), Some(91)),
-                            ("SILICON", Some(310), Some(540)),
-                            ("SILICON", Some(510), Some(105))
-                        ],
-                        vec![
-                            ("TITANIUM", Some(516), Some(3)),
-                            ("ASLARITE", Some(575), Some(3)),
-                            ("AGRICIUM", Some(346), Some(28)),
-                            ("AGRICIUM", Some(588), Some(16))
-                        ],
-                    ],
-                    "{suffix}"
-                );
-                assert!(running.iter().all(|o| o.time_remaining.value.is_some()), "{suffix}");
-            }
-            // The whole overview: the finished work order 1 left of both
-            let v = read(&mut ocr, &dir, "575").unwrap();
             assert_eq!(
-                v.orders.iter().map(|o| o.status).collect::<Vec<_>>(),
-                [Status::Completed, Status::Processing, Status::Processing]
+                orders(&overview(&mut ocr, "1794147615-read-27")),
+                vec![
+                    (Status::Processing, Some(10 * 60 + 52), RUNNING_A.to_vec()),
+                    (Status::Processing, Some(32 * 60 + 6), RUNNING_B.to_vec()),
+                    (Status::Processing, Some(3600 + 19 * 60), RUNNING_C.to_vec()),
+                ]
             );
-            assert_eq!(v.orders[1].time_remaining.value, Some(2 * 3600 + 54 * 60));
-            assert_eq!(v.orders[2].time_remaining.value, Some(13 * 60 + 55));
+        }
+
+        // "SILICON 782" at 1080p, a borderline glyph (ADR 0018): read right, or scored below the companion's 0.95
+        #[test]
+        fn a_misread_digit_scores_low() {
+            let mut ocr = test_ocr();
+            let v = overview(&mut ocr, "1794147615-read-12");
+            let order = v.orders.iter().find(|o| o.rows.len() == 5).expect("work order 2");
+            let row = &order.rows[4];
+            assert_eq!(row.material.text, "SILICON");
+            assert!(row.quality.value == Some(782) || row.quality.score < 0.95, "{:?}", row.quality);
         }
     }
 }

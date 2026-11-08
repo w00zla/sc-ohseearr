@@ -211,53 +211,42 @@ impl Reader for WarehouseReader {
     }
 }
 
-// The local screenshots (not in git: $SC_OHSEEARR_DATA, else <repo>/local), read without a cursor (the whole pane,
-// as the first read of a session); skipped without them. Slow in debug builds: cargo test --release.
+// Frames of debug recordings (the submodule fixtures/, ADR 0021) with their recorded cursor, each read on its own (no prior),
+// against what the tooltip and the hovered tile show, checked by hand. Slow in debug builds: cargo test --release.
 #[cfg(test)]
-mod screenshots {
+mod frames {
     use super::*;
     use sc_ohseearr_core::NanoDet;
     use sc_ohseearr_sc::norm;
-    use sc_ohseearr_test_support::{TEST_THREADS, data_root, frames, test_ocr};
-    use std::path::PathBuf;
-
-    fn shots(dir: &str) -> Vec<PathBuf> {
-        frames(&data_root().join("screenshots").join(dir))
-    }
+    use sc_ohseearr_test_support::{TEST_THREADS, fixture, test_ocr};
 
     #[test]
-    fn grids_tooltips_and_hovered_stacks() {
-        let (terminal, inventory) = (shots("fe terminal 1"), shots("inventory 2"));
-        if terminal.is_empty() || inventory.is_empty() {
-            eprintln!("screenshots missing, skipped");
-            return;
-        }
+    fn tooltips_and_hovered_stacks() {
         let mut ocr = test_ocr();
         let layout = NanoDet::new(&sc_ohseearr_model_sc_warehouse_layout::package(), TEST_THREADS, false).unwrap();
         let mut reader = WarehouseReader::new(layout).unwrap();
-        // Checked against the shots: the tooltip name's start, its quality chip and SCU, the hovered tile's count.
-        // Ship components are not booked from the warehouse, and tiny misreads their names ("Mil/3/A Blizard",
-        // "Mil/A VK-00"): only their start is checked
-        // (file name end, title start, chip quality, SCU, hovered count)
+        // (frame, tooltip name, chip quality, SCU, hovered count)
         type Case<'a> = (&'a str, &'a str, Option<u32>, Option<&'a str>, Option<u32>);
         let cases: &[Case] = &[
-            ("17-17-27-58F", "Beradom", Some(578), Some("0.001"), Some(3)),
-            ("17-17-35-520", "Feynmaline", Some(561), Some("0.001"), Some(14)),
-            ("13-04-05-C45", "Mil", None, None, Some(1)),
-            // A ship component's tooltip has no chip (a stray "1" read as one before 2026-10-27)
-            ("13-04-10-D57", "Mil", None, None, Some(1)),
+            // 3840×1600
+            ("1793396676-read-27", "Hephaestanite", Some(572), Some("0.263"), Some(1)),
+            ("1793396676-read-65", "Hadanite", Some(526), Some("0.001"), Some(2)),
+            ("1793396676-read-116", "Feynmaline", Some(371), Some("0.001"), Some(63)),
+            // 1920×1080
+            ("1793396994-read-37", "Silicon", Some(310), Some("2"), Some(1)),
+            ("1793396994-read-112", "Hadanite", Some(526), Some("0.001"), Some(2)),
+            ("1793396994-read-182", "Janalite", Some(269), Some("0.001"), Some(10)),
+            // An item: no chip, no SCU
+            ("1793396994-read-107", "Chairman's Club Coin", None, None, Some(1)),
         ];
-        for (id, path) in terminal.iter().chain(&inventory).enumerate() {
-            let name = path.file_stem().unwrap().to_string_lossy().to_string();
-            let image = image::open(path).unwrap().to_rgb8();
-            // Every shot on its own: no prior
+        for (id, (name, title, quality, scu, count)) in cases.iter().enumerate() {
+            let (image, cursor) = fixture("warehouse", name);
             reader.reset();
-            let frame = Frame { id: id as u64, image: &image, cursor: None, locale: None };
+            let frame = Frame { id: id as u64, image: &image, cursor, locale: None };
             assert!(reader.probe(&mut ocr, &frame).unwrap(), "{name}: no grid");
             let grid = reader.read(&mut ocr, &frame).unwrap().output;
-            let Some((_, title, quality, scu, count)) = cases.iter().find(|c| name.ends_with(c.0)) else { continue };
             let tip = grid.tooltip.as_ref().unwrap_or_else(|| panic!("{name}: no tooltip"));
-            assert!(norm(&tip.name.text).starts_with(&norm(title)), "{name}: {}", tip.name.text);
+            assert_eq!(norm(&tip.name.text), norm(title), "{name}: {}", tip.name.text);
             assert_eq!((tip.quality.value, tip.scu.value.as_deref()), (*quality, *scu), "{name}");
             let hovered = grid.tiles.iter().find(|t| t.hovered).unwrap_or_else(|| panic!("{name}: no hovered tile"));
             assert_eq!(hovered.count.value, *count, "{name}");

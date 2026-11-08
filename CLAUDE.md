@@ -22,7 +22,8 @@ here that could move results.
   open points, phases or "to come"/"until replaced". Decisions live in `docs/adr/`, plans in `.claude/open-points.md`.
 - **ADRs** in `docs/adr/` for architecture decisions, written only after the user decided (skill `adr`).
 - **Game data in git only as small excerpts** (ADR 0015): what a test, eval or example concretely needs (the loc keys
-  a test reads, a few records, single crops or frames; a file up to ~1 MB, a set a few MB), with its source noted.
+  a test reads, a few records, single crops; a file up to ~1 MB, a set a few MB), with its source noted. The readers'
+  test frames live in the separate repository sc-ohseearr-fixtures, the submodule `fixtures/` (ADR 0021).
   Never whole files: no `global.ini`, fonts (Blender Pro is commercial), `Data.p4k` extracts, complete recordings or
   datasets; the English `global.ini` comes from `Data.p4k` with any extracting tool (`scripts/extract-global-ini.*`: StarBreaker), fonts and
   translations users get themselves (`training/README.md`, ADR 0016). Local data lives
@@ -42,6 +43,7 @@ here that could move results.
 ## Commands
 
 ```sh
+git submodule update --init                       # fixtures/: the readers' test frames
 cargo test --release --workspace
 cargo clippy --release --workspace --all-targets --features sc-ohseearr-core/directml
 cargo fmt --all

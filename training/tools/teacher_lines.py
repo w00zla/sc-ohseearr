@@ -5,8 +5,8 @@ Input: the box dumps the examples wrote with the teacher (the recognizer cut to 
 `<teacher>/inv-<rec>/boxes-<frame>.txt` (the Quartermaster companion's `inventory_dump` over a warehouse
 recording) and `<teacher>/ref/<folder>__<screenshot>.txt` (`ocr_dump` over refinery screenshots; spaces in the
 folder name as "_"). Every box line `x y w h score text` with score >= 0.95 and at least two characters becomes a
-crop. Train: warehouse recording ...6676 and the refinery screenshots except the frames of the Rust tests (GATE);
-eval: warehouse recording ...6994 and the test frames.
+crop. Train: warehouse recording ...6676 and the refinery screenshots except the held-out frames (GATE);
+eval: warehouse recording ...6994 and the held-out frames.
 Output: `<root>/ocr-train/teacher/labels.tsv` (file, text; no header) and `<root>/ocr-eval-teacher/labels.tsv`
 (header: file, set, source, label) with their crops.
 
@@ -22,7 +22,7 @@ import sys
 
 import cv2
 
-GATE = {"20D", "E87", "0F4", "DC5", "2E4", "BB4", "575"}     # suffixes of the refinery frames the Rust tests use
+GATE = {"20D", "E87", "0F4", "DC5", "2E4", "BB4", "575"}     # suffixes of the refinery frames held out for the eval
 MIN_SCORE = 0.95
 TRAIN_REC, EVAL_REC = "1793396676", "1793396994"
 LINE = re.compile(r"^\s*(-?\d+)\s+(-?\d+)\s+(\d+)\s+(\d+)\s+([\d.]+)\s+(.+)$")

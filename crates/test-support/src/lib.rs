@@ -30,26 +30,19 @@ pub fn test_ocr() -> Ocr {
     ocr(TEST_THREADS, false)
 }
 
-/// The screenshot folder `<data root>/screenshots/<folder>`; None (and a note on stderr) when it is missing, so the
-/// test is skipped.
-pub fn screenshots(folder: &str) -> Option<PathBuf> {
-    let dir = data_root().join("screenshots").join(folder);
-    if !dir.is_dir() {
-        eprintln!("{} missing, skipped", dir.display());
-        return None;
-    }
-    Some(dir)
-}
-
-/// The `*.jpg` of `dir` whose name ends in `suffix`.
-pub fn shot(dir: &Path, suffix: &str) -> RgbImage {
-    let file = std::fs::read_dir(dir)
-        .unwrap_or_else(|e| panic!("{}: {e}", dir.display()))
-        .flatten()
-        .map(|e| e.path())
-        .find(|p| p.to_string_lossy().ends_with(&format!("{suffix}.jpg")))
-        .unwrap_or_else(|| panic!("{}: no {suffix}.jpg", dir.display()));
-    image::open(&file).unwrap_or_else(|e| panic!("{}: {e}", file.display())).to_rgb8()
+/// A test frame of the submodule `fixtures/` (the repository sc-ohseearr-fixtures): `fixtures/<reader>/<name>.jpg`, a
+/// frame of a debug recording, and the cursor the recording stored with it (`<name>.json`). Panics when the submodule
+/// is not checked out.
+pub fn fixture(reader: &str, name: &str) -> (RgbImage, Option<(f32, f32)>) {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
+    assert!(
+        root.join(reader).is_dir(),
+        "{} missing: check out the submodule (git submodule update --init)",
+        root.join(reader).display()
+    );
+    let file = root.join(reader).join(format!("{name}.jpg"));
+    let image = image::open(&file).unwrap_or_else(|e| panic!("{}: {e}", file.display())).to_rgb8();
+    (image, cursor_of(&file))
 }
 
 /// The frames of `dir`:`*.jpg`, then `*.png` (case-insensitive), each sorted by name; none for a missing folder.

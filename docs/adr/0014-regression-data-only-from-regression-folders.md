@@ -1,6 +1,6 @@
 # 0014. Regression data only from `regression/<reader>/`; screenshots are scratch
 
-- Status: accepted; the bullet leaving training sources unaffected superseded by [0020](0020-training-sources-in-their-own-folder.md)
+- Status: accepted; the bullet leaving training sources unaffected superseded by [0020](0020-training-sources-in-their-own-folder.md); the replacement of the screenshot tests decided in [0021](0021-reader-test-frames-in-a-fixtures-repository.md)
 - Date: 2026-11-08
 - Scope: the data root, `readers/*/regression.toml`, the readers' tests, the apps' regression dumps
 

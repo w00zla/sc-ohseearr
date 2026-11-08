@@ -44,8 +44,9 @@ cargo test -p sc-ohseearr-warehouse --release
 cargo clippy -p sc-ohseearr-warehouse --release --all-targets
 ```
 
-The screenshot test reads `screenshots/fe terminal 1` and `screenshots/inventory 2` below the
-[data root](../../README.md#data-root) (39 shots, ~2.5 s) and is skipped silently when they are absent.
+The frame test reads seven frames of debug recordings from the submodule `fixtures/warehouse` (3840×1600 and
+1920×1080, with their cursors), each on its own without a prior, and checks the tooltip's name, quality and SCU and
+the hovered tile's count; it fails when the submodule is not checked out (`git submodule update --init`).
 
 ## Regression
 

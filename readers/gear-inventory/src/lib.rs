@@ -200,12 +200,11 @@ fn rest(
 mod tests {
     use super::*;
     use sc_ohseearr_sc::norm;
-    use sc_ohseearr_test_support::{screenshots, shot as frame, test_ocr};
-    use std::path::PathBuf;
+    use sc_ohseearr_test_support::{fixture, test_ocr};
 
-    fn setup(dir: &str) -> Option<(Ocr, PathBuf)> {
-        let dir = screenshots(dir)?;
-        Some((test_ocr(), dir))
+    /// A frame of `fixtures/gear-inventory` and its recorded cursor
+    fn frame(name: &str) -> (RgbImage, Option<(f32, f32)>) {
+        fixture("gear-inventory", name)
     }
 
     /// Whether a line reads as `label` followed by `value` (letters and digits compared)
@@ -222,130 +221,93 @@ mod tests {
         assert!(GearDiagnostics::default().boxes().is_empty());
     }
 
-    // The user's screenshots (local data, not in git) against what the tooltips show; skipped without
-    // them. Slow in debug builds: cargo test --release.
+    // Frames of debug recordings (the submodule fixtures/, ADR 0021) against what the tooltips show, checked by hand.
+    // Slow in debug builds: cargo test --release.
     #[test]
-    fn tooltips_of_the_inventory_screen() {
-        let Some((mut ocr, dir)) = setup("inventory 3") else { return };
-        #[allow(clippy::type_complexity)]
-        let cases: &[(&str, &str, &[(&str, &str)], u32)] = &[
-            ("19-58-50-5AE", "Ardor-3 Salvaged Repeater", &[], 2),
-            ("19-58-53-039", "M3A Cannon Defense Division", &[], 2),
+    fn tooltips_pages_and_hovered_tiles() {
+        let mut ocr = test_ocr();
+        // Frame, title, stat lines, the last line (empty: not checked), page, the hovered tile's span
+        type Case<'a> = (&'a str, &'a str, &'a [(&'a str, &'a str)], &'a str, (u32, u32), u32);
+        let cases: &[Case] = &[
+            // 3840×1600
+            ("1793393861-read-5", "P8-AR \"CitizenCon 2954\" Rifle", &[], "Registered To You", (1, 5), 2),
             (
-                "19-59-02-415",
-                "Civ/1/A Atlas",
-                &[("Integrity:", "200.00"), ("Quantum Speed:", "259.05 Mm/s"), ("Quantum Fuel Burn:", "7.55 per Km")],
+                "1793393861-read-7",
+                "Karna \"Alpine Sunset\" Rifle",
+                &[
+                    ("Fire Rate:", "600.00 RPM"),
+                    ("Impact Force:", "+0.00 %"),
+                    ("Recoil Kick:", "+0.00 %"),
+                    ("Recoil Smoothness:", "-0.00 %"),
+                    ("Recoil Handling:", "-0.00 %"),
+                ],
+                "",
+                (1, 5),
                 2,
             ),
-            ("19-59-09-0F9", "Mil/3/A Blizzard", &[("Coolant Rating:", "60.00"), ("Integrity:", "1800.00")], 2),
-            ("19-59-22-420", "Sth/1/C HeatSafe", &[("Coolant Rating:", "22.00"), ("Integrity:", "110.00")], 2),
-            ("19-59-28-865", "Mil/2/B CoverAll", &[("Integrity:", "660.00"), ("Max. Shield Strength:", "10560.00")], 2),
-            ("19-59-35-5AD", "Mil/1/B Sovereign IP-10", &[], 2),
-            ("19-59-38-F64", "Mil/1/B BriskAir IC-10", &[], 3),
+            // 1920×1080
+            (
+                "1793454173-read-164",
+                "Mil/3/A TS-2",
+                &[
+                    ("Integrity:", "2300.00"),
+                    ("Quantum Speed:", "509.72 Mm/s"),
+                    ("Quantum Fuel Burn:", "141.68 per Km"),
+                ],
+                "",
+                (1, 5),
+                1,
+            ),
+            ("1793454173-read-273", "M3A Cannon Defense Division", &[], "", (3, 5), 2),
+            (
+                "1793454173-read-299",
+                "Sth/1/C HeatSafe",
+                &[("Coolant Rating:", "22.00"), ("Integrity:", "110.00")],
+                "",
+                (4, 5),
+                1,
+            ),
+            (
+                "1793454173-read-340",
+                "Brandt Module",
+                &[("Shatter Damage:", "-30%"), ("Mining Laser Power:", "135%"), ("Resistance:", "+15%")],
+                "",
+                (4, 5),
+                1,
+            ),
         ];
-        for (suffix, title, stats, page) in cases {
-            let started = std::time::Instant::now();
-            let read = read_components(&mut ocr, &frame(&dir, suffix), None, None).unwrap().output;
-            eprintln!(
-                "{suffix}: {:?} in {:?}, page {:?}",
-                read.tooltip.as_ref().map(|t| &t.title.text),
-                started.elapsed(),
-                read.page
-            );
-            let tip = read.tooltip.unwrap_or_else(|| panic!("{suffix}: no tooltip"));
-            assert_eq!(norm(&tip.title.text), norm(title), "{suffix}: {}", tip.title.text);
+        for (name, title, stats, last, page, span) in cases {
+            let (image, cursor) = frame(name);
+            let read = read_components(&mut ocr, &image, cursor, None).unwrap().output;
+            let tip = read.tooltip.as_ref().unwrap_or_else(|| panic!("{name}: no tooltip"));
+            let texts: Vec<&str> = tip.lines.iter().map(|l| l.text.as_str()).collect();
+            assert_eq!(norm(&tip.title.text), norm(title), "{name}: {}", tip.title.text);
             for (label, value) in *stats {
-                assert!(
-                    has_stat(&tip, label, value),
-                    "{suffix}: {label} {value} not in {:?}",
-                    tip.lines.iter().map(|l| &l.text).collect::<Vec<_>>()
-                );
+                assert!(has_stat(tip, label, value), "{name}: {label} {value} not in {texts:?}");
             }
             // No stat line reads as one where the tooltip has none
             if stats.is_empty() {
-                assert!(!tip.lines.iter().any(|l| norm(&l.text).starts_with("INTEGRITY")), "{suffix}: {:?}", tip.lines);
-            }
-            assert_eq!(read.page.map(|p| (p.index, p.total)), Some((*page, 3)), "{suffix}");
-        }
-    }
-
-    #[test]
-    fn fps_gear_tooltips_tiles_and_stacks() {
-        let Some((mut ocr, dir)) = setup("inventory 4") else { return };
-        // Shot, title, stat lines, the last line before a second tooltip, a cursor on the hovered
-        // tile (the shots have none: the tile's centre) with its span and stack count
-        type Case<'a> = (&'a str, &'a str, &'a [(&'a str, &'a str)], &'a str, (f32, f32), u32, Option<u32>);
-        let cases: &[Case] = &[
-            (
-                "15-53-26-8DE",
-                "Artimex Arms Canuto",
-                &[("Damage Mitigation:", "0.30"), ("Min Temp:", "-61.00"), ("Max Temp:", "+91.00")],
-                "Registered To You",
-                (2634.0, 467.0),
-                1,
-                None,
-            ),
-            (
-                "15-54-15-7E3",
-                "Gallant Rifle",
-                &[("Fire Rate:", "900.00 RPM"), ("Impact Force:", "+0.00 %"), ("Recoil Handling:", "-0.00 %")],
-                "Recoil Handling: -0.00 %",
-                (2867.0, 612.0),
-                2,
-                None,
-            ),
-            (
-                "15-55-06-F11",
-                "CQ7 Rifle",
-                &[
-                    ("Fire Rate:", "713.49 RPM"),
-                    ("Impact Force:", "+6.11 %"),
-                    ("Recoil Kick:", "-28.44 %"),
-                    ("Recoil Smoothness:", "+28.44 %"),
-                ],
-                "Recoil Handling: +28.44 %",
-                (0.0, 0.0),
-                0,
-                None,
-            ),
-            ("15-54-40-B2A", "Emod Stabilizer3", &[], "", (2788.0, 1219.0), 1, Some(2)),
-            ("15-54-54-211", "Veil Flash Hider2", &[], "", (0.0, 0.0), 0, None),
-        ];
-        for (suffix, title, stats, last, cursor, span, count) in cases {
-            let frame = frame(&dir, suffix);
-            let read = read_components(&mut ocr, &frame, (*span > 0).then_some(*cursor), None).unwrap().output;
-            let tip = read.tooltip.unwrap_or_else(|| panic!("{suffix}: no tooltip"));
-            let texts: Vec<&str> = tip.lines.iter().map(|l| l.text.as_str()).collect();
-            assert_eq!(norm(&tip.title.text), norm(title), "{suffix}: {}", tip.title.text);
-            for (label, value) in *stats {
-                assert!(has_stat(&tip, label, value), "{suffix}: {label} {value} not in {texts:?}");
+                assert!(!texts.iter().any(|t| norm(t).starts_with("INTEGRITY")), "{name}: {texts:?}");
             }
             if !last.is_empty() {
-                assert_eq!(texts.last().map(|t| norm(t)), Some(norm(last)), "{suffix}: {texts:?}");
+                assert_eq!(texts.last().map(|t| norm(t)), Some(norm(last)), "{name}: {texts:?}");
             }
-            // Nothing of the tooltip below (the equipped piece, the weapon list)
-            assert!(
-                !texts.iter().any(|t| t.starts_with("1:") || t.contains("Dust Devil") || t.contains("Sion")),
-                "{suffix}: {texts:?}"
-            );
-            if *span > 0 {
-                let cell = read.cell.unwrap_or_else(|| panic!("{suffix}: no tile at {cursor:?}"));
-                assert_eq!((cell.span, cell.count.value), (*span, *count), "{suffix}: {cell:?}");
-            }
+            assert_eq!(read.page.map(|p| (p.index, p.total)), Some(*page), "{name}");
+            assert_eq!(read.cell.map(|c| c.span), Some(*span), "{name}: no tile at {cursor:?}");
         }
     }
 
     #[test]
     fn the_reader_keeps_the_scale_and_probe_is_reused() {
-        let Some((mut ocr, dir)) = setup("inventory 3") else { return };
-        let image = frame(&dir, "19-59-09-0F9");
+        let mut ocr = test_ocr();
+        let (image, _) = frame("1793454173-read-299");
         let mut reader = GearInventoryReader::new();
         assert_eq!(reader.scale(), None);
         let f = Frame { id: 7, image: &image, cursor: None, locale: None };
         assert!(reader.probe(&mut ocr, &f).unwrap());
         let read = reader.read(&mut ocr, &f).unwrap();
-        assert_eq!(read.output.page, Some(Page { index: 2, total: 3 }));
-        assert_eq!(read.output.tooltip.as_ref().map(|t| norm(&t.title.text)), Some(norm("Mil/3/A Blizzard")));
+        assert_eq!(read.output.page, Some(Page { index: 4, total: 5 }));
+        assert_eq!(read.output.tooltip.as_ref().map(|t| norm(&t.title.text)), Some(norm("Sth/1/C HeatSafe")));
         let k = reader.scale().expect("scale kept");
         assert_eq!(read.diagnostics.scale, k);
         // Same result as the stateless read of the same frame

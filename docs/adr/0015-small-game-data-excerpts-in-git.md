@@ -1,6 +1,6 @@
 # 0015. Small game-data excerpts may go into git; the rest is exported by a script
 
-- Status: accepted; the bullet on fetching community content pinned superseded by [0016](0016-translations-are-fetched-by-the-user.md)
+- Status: accepted; the bullet on fetching community content pinned superseded by [0016](0016-translations-are-fetched-by-the-user.md); frames for the readers' tests superseded by [0021](0021-reader-test-frames-in-a-fixtures-repository.md) (a separate repository)
 - Date: 2026-11-08
 - Scope: repository content, tests, training data, `scripts/`
 - Supersedes: in [0002](0002-licenses-and-model-weights.md) the bullet "The font, screenshots, recordings and any
