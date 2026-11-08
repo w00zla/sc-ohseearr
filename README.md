@@ -40,48 +40,88 @@
 
 ## Use
 
-A git dependency (no crates.io), pinned by a release tag or a revision:
+A git dependency (no crates.io), pinned by a release tag or a revision. Every crate of the repository:
 
 ```toml
 [dependencies]
-sc-ohseearr-core = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+# The engine and the models
+sc-ohseearr-core = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }  # features = ["directml"] for the GPU
 sc-ohseearr-model-paddle-det-tiny = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
 sc-ohseearr-model-sc-rec-latin = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+sc-ohseearr-model-sc-warehouse-layout = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }  # only to use it directly
+# The game: texts, parsers, the reader interface; the readers
 sc-ohseearr-sc = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+sc-ohseearr-warehouse = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+sc-ohseearr-gear-inventory = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
 sc-ohseearr-refinery = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+# The window capture (Windows)
+sc-ohseearr-capture-win = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
 ```
 
-Read the text lines of an image:
+The engine alone, the text lines of an image:
 
 ```rust
-let det = sc_ohseearr_model_paddle_det_tiny::package();
-let rec = sc_ohseearr_model_sc_rec_latin::package();
-let mut ocr = sc_ohseearr_core::Ocr::new(&det, &rec, 3, false)?; // 3 threads, CPU
-for line in ocr.read(&image, 800)? {                             // the frame scaled to 800 px height
+use std::path::Path;
+use sc_ohseearr_core::{ModelPackage, Ocr};
+
+let det = sc_ohseearr_model_paddle_det_tiny::package();      // compiled in
+let rec = ModelPackage::load(Path::new("models/sc-rec-latin"))?; // or a package folder loaded at run time
+let mut ocr = Ocr::new(&det, &rec, 3, false)?;                 // 3 threads, CPU (true: GPU)
+for line in ocr.read(&image, 800)? {                           // the frame scaled to 800 px height
     println!("{} ({:.2})", line.text, line.score);
 }
 ```
 
-Read a screen with a reader:
+A model on its own, the warehouse layout detector:
 
 ```rust
-use sc_ohseearr_sc::{Frame, LocTable, Locale, Reader};
-
-let english = LocTable::load(Path::new("global-english.ini"))?;
-let locale = Locale::new(None, Some(english))?;                  // a language pack first, then English
-let mut reader = sc_ohseearr_refinery::RefineryReader::new();
-let frame = Frame { id: 1, image: &image, cursor: None, locale: Some(&locale) };
-if reader.probe(&mut ocr, &frame)? {
-    let refinery = reader.read(&mut ocr, &frame)?.output;        // station, work orders, rows
+let mut layout = sc_ohseearr_core::NanoDet::new(&sc_ohseearr_model_sc_warehouse_layout::package(), 3, false)?;
+for d in layout.detect(&image)? {                              // the classes of `layout.classes()`
+    println!("{:?}", d);
 }
 ```
 
-- Every reader takes the `Ocr` above (detector and recognizer); a reader with a model of its own brings it as its
-  dependency: `sc-ohseearr-warehouse` the layout model `sc-ohseearr-model-sc-warehouse-layout`.
+Everything together, the game window read live by all readers:
+
+```rust
+use std::path::Path;
+use sc_ohseearr_capture_win::{WindowCapture, set_per_monitor_dpi_aware};
+use sc_ohseearr_core::Ocr;
+use sc_ohseearr_gear_inventory::GearInventoryReader;
+use sc_ohseearr_refinery::RefineryReader;
+use sc_ohseearr_sc::{Frame, LocTable, Locale, Reader};
+use sc_ohseearr_warehouse::WarehouseReader;
+
+let mut ocr = Ocr::new(&sc_ohseearr_model_paddle_det_tiny::package(), &sc_ohseearr_model_sc_rec_latin::package(), 3, false)?;
+// The game's texts: the player's language pack (if any) first, then the English table
+let locale = Locale::new(None, Some(LocTable::load(Path::new("global-english.ini"))?))?;
+// Each reader keeps its own state across frames (the warehouse its layout, with its own model)
+let (mut warehouse, mut gear, mut refinery) = (WarehouseReader::new(), GearInventoryReader::new(), RefineryReader::new());
+
+set_per_monitor_dpi_aware()?;                                  // once, before any window exists
+let mut capture = WindowCapture::new("StarCitizen.exe");
+let mut id = 0;
+loop {
+    // A frame of the game window while it is in front, with the cursor; None: no new image
+    let Some(shot) = capture.grab()? else { continue };
+    let image = shot.pixels.into_rgb();
+    id += 1;
+    let frame = Frame { id, image: &image, cursor: shot.cursor, locale: Some(&locale) };
+    // Which screen is visible is the app's business: probe (cheap), then read
+    if warehouse.probe(&mut ocr, &frame)? {
+        let w = warehouse.read(&mut ocr, &frame)?.output;      // tiles, the hovered tile's tooltip
+    } else if gear.probe(&mut ocr, &frame)? {
+        let g = gear.read(&mut ocr, &frame)?.output;           // page, hovered cell, tooltip with stats
+    } else if refinery.probe(&mut ocr, &frame)? {
+        let r = refinery.read(&mut ocr, &frame)?.output;       // station, work orders with their rows
+    }
+}
+```
+
 - `ort` is pinned to `=2.0.0-rc.13`: a build has one ONNX Runtime, so a consumer uses that version too.
-- GPU: the feature `directml` of `sc-ohseearr-core`, then `Ocr::new(.., true)`.
 - Frames go in at their native size; the readers scale them by their height (the game's UI scales with it, on 16:9
   as on ultrawide).
+- Diagnostics (every text box read, fit internals) come with `set_diagnostics(true)`, as `read(..)?.diagnostics`.
 
 ## How it works
 
