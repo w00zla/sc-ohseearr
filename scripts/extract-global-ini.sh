@@ -5,7 +5,8 @@
 # texts (ADR 0007), so players without a pack need this file. It is written as global-english-<version>.ini into
 # the output folder, the version from build_manifest.id next to Data.p4k, so a stale file is obvious after a patch.
 #
-# Needs the StarBreaker CLI (https://github.com/w00zla/starbreaker-ps, `starbreaker p4k extract`).
+# Needs a StarBreaker CLI with `p4k extract`: upstream (https://github.com/diogotr7/StarBreaker) or a fork such as
+# starbreaker-ps (https://github.com/w00zla/starbreaker-ps).
 #
 # Usage: scripts/extract-global-ini.sh <starbreaker> [Data.p4k (default $SC_DATA_P4K)] [out dir (default .)]
 set -euo pipefail
