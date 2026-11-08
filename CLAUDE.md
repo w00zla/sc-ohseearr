@@ -22,7 +22,7 @@ here that could move results.
 - **Game data in git only as small excerpts** (ADR 0015): what a test, eval or example concretely needs (the loc keys
   a test reads, a few records, single crops or frames; a file up to ~1 MB, a set a few MB), with its source noted.
   Never whole files: no `global.ini`, fonts (Blender Pro is commercial), `Data.p4k` extracts, complete recordings or
-  datasets; the English `global.ini` comes from `scripts/extract-global-ini.*` (any StarBreaker CLI), fonts and
+  datasets; the English `global.ini` comes from `Data.p4k` with any extracting tool (`scripts/extract-global-ini.*`: StarBreaker), fonts and
   translations users get themselves (`training/README.md`, ADR 0016). Local data lives
   in `local/` (gitignored: screenshots, recordings, training data, the venv with the NanoDet checkout). Model weights
   trained on such data are fine (ADR 0002).

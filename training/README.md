@@ -11,7 +11,8 @@ Pipelines that turn a **recipe** (one YAML file per model) and local data into a
 Training data stays in the data root (README.md, ["Data root"](../README.md#data-root)): game fonts, screenshots,
 recordings, language files and generated datasets are whole files, which never go into git (ADR 0015: only small
 excerpts a test needs). Code and recipes are versioned; the English `global.ini` comes from
-`scripts/extract-global-ini.{ps1,sh}` (any StarBreaker CLI), the fonts and a translation are placed by hand as below
+any tool that extracts it from `Data.p4k` (our `scripts/extract-global-ini.{ps1,sh}` with StarBreaker), the fonts
+and a translation are placed by hand as below
 (ADR 0016).
 
 ```
@@ -66,7 +67,8 @@ synthetic lines from their item names, descriptions, commodity names and refiner
 recognizer also knows the words and characters (umlauts, ß) of German players. Neither file is in the repository
 (ADR 0015, 0016); get them yourself:
 
-- **English**: the game keeps it inside `Data.p4k`. `scripts/extract-global-ini.{ps1,sh}` exports it with
+- **English**: the game keeps it inside `Data.p4k` (`Data/Localization/english/global.ini`): any tool that extracts
+  files from `Data.p4k` gets it (there are several); `scripts/extract-global-ini.{ps1,sh}` does it with
   StarBreaker (upstream or a fork like starbreaker-ps; `global-english-<version>.ini`); a language pack that replaces the English texts (e.g. one
   installed at `<install>/LIVE/data/Localization/english/global.ini`) works too. Point `SC_GLOBAL_INI` at it.
 - **German**: any complete translation `global.ini`, e.g. the community project

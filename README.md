@@ -21,7 +21,7 @@ any app that reads the game's UI.
 | `models/*` | `sc-ohseearr-model-*` | model packages (below) |
 | `readers/*` | `sc-ohseearr-<reader>` | readers with their cards and regression setup: `warehouse`, `gear-inventory`, `refinery` |
 | `training/` | — | training pipelines and recipes that produce model packages |
-| `scripts/` | — | `extract-global-ini.{ps1,sh}`: the game's English texts from `Data.p4k` (StarBreaker CLI) |
+| `scripts/` | — | `extract-global-ini.{ps1,sh}`: the game's English texts from `Data.p4k` with a StarBreaker CLI (any tool that extracts files from `Data.p4k` does the same) |
 
 ## Readers
 
@@ -36,7 +36,9 @@ locale }` and returns neutral output: what the game shows, uncertain values as `
 ambiguous), names as `Name` with candidate loc keys. Which screen is visible is the app's business.
 
 The game's texts: readers never carry them. Pass a `Locale` built from the player's language pack and/or the English
-table extracted from the game (`scripts/extract-global-ini.ps1 -StarBreaker <starbreaker.exe> -P4k <Data.p4k>`).
+table extracted from the game: `Data/Localization/english/global.ini` in `Data.p4k`, taken out with any tool that
+extracts files from it (there are several), e.g. with StarBreaker by our script
+(`scripts/extract-global-ini.ps1 -StarBreaker <starbreaker.exe> -P4k <Data.p4k>`).
 
 ## Model families
 
