@@ -25,3 +25,4 @@
 | [0021](0021-reader-test-frames-in-a-fixtures-repository.md) | The readers' tests assert on recording frames from a separate fixtures repository | accepted | 2026-11-08 |
 | [0022](0022-public-release-before-the-mining-hud.md) | The public release does not wait for the mining HUD reader | accepted | 2026-11-08 |
 | [0023](0023-pull-requests-tests-and-releases-on-github.md) | Pull requests only, tests on pull requests, releases by tag | accepted | 2026-11-08 |
+| [0024](0024-no-int8-quantization.md) | No int8 quantization of the detector and the recognizer | accepted | 2026-11-08 |
