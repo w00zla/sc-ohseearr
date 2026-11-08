@@ -1,9 +1,5 @@
 # The data folders the regression covers (examples/regress.rs), relative to the data root
-# (README.md, "Data root"). The images stay local (ADR 0008); no expected outputs are kept in git:
-# compare the printed lines before and after a change.
-folders = [
-    "screenshots/refinery flow",
-    "screenshots/refinery flow 2",
-    "screenshots/refinery flow 3",
-    "screenshots/fe terminal 1",
-]
+# (README.md, "Data root"; only `regression/refinery/`, ADR 0014): debug recordings of the refinery terminal. The
+# images stay local (ADR 0008); no expected outputs are kept in git: compare the printed lines before and after a
+# change. Empty until the in-game recordings of 2026-11 are added.
+folders = []

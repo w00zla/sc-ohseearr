@@ -15,3 +15,4 @@
 | [0011](0011-dataset-converters-without-python-in-the-app.md) | The app writes datasets from its recordings in Rust; tools over generic inputs live here | accepted | 2026-11-07 |
 | [0012](0012-apps-provide-the-english-table.md) | Each app decides how it provides the English table | accepted | 2026-11-08 |
 | [0013](0013-readers-instead-of-use-cases-and-screen-readers.md) | "Reader" as the one term: `readers/` and the `Reader` trait | accepted | 2026-11-08 |
+| [0014](0014-regression-data-only-from-regression-folders.md) | Regression data only from `regression/<reader>/`; screenshots are scratch | accepted | 2026-11-08 |

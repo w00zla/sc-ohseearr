@@ -103,7 +103,10 @@ cargo test --release --workspace
 Test, regression and training data (screenshots, recordings, line crops, fonts) are not in the repository. Everything
 that reads them, the tests, the `regress` examples (`--data <root>`) and the training pipelines (`--data-root
 <dir>`), looks in the **data root**: `$SC_OHSEEARR_DATA`, else `local/` in the repository (gitignored). Below it:
-`screenshots/…`, `stock_scan_debug/…` (debug recordings), `training/<id>/` (training runs). Tests skip what is
+`regression/<reader>/<set>/` (the regression sets: the apps' debug recordings, the only data the readers'
+`regression.toml` and the apps' regression dumps refer to, ADR 0014), `screenshots/…` and `stock_scan_debug/…`
+(scratch for analysis and prototyping, no test fixture; the readers' old screenshot tests still read
+`screenshots/` until they are replaced), `training/<id>/` (training runs). Tests skip what is
 missing.
 
 ## Game data and fan content
