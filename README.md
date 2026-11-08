@@ -1,46 +1,100 @@
 <p align="center"><img src="docs/logo.jpg" alt="ohseearr" width="800"></p>
 
-# sc-ohseearr
+<h1 align="center">sc-ohseearr</h1>
 
-OCR for Star Citizen screens, in Rust: an engine on ONNX Runtime (CPU, or GPU via DirectML on Windows), a
-collection of model packages, readers of real game screens, the game's language tables, a window capture and the
-training pipelines behind the models. It started as the OCR core of the Quartermaster companion app and is meant for
-any app that reads the game's UI.
+<p align="center">
+  <a href="https://github.com/w00zla/sc-ohseearr/actions/workflows/test.yml"><img src="https://github.com/w00zla/sc-ohseearr/actions/workflows/test.yml/badge.svg?event=pull_request" alt="Tests"></a>
+  <a href="https://github.com/w00zla/sc-ohseearr/releases"><img src="https://img.shields.io/github/v/release/w00zla/sc-ohseearr?color=54adf7" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-54adf7" alt="License: MIT"></a>
+  <a href="Cargo.toml"><img src="https://img.shields.io/badge/rust-1.88%2B-54adf7?logo=rust" alt="Rust 1.88+"></a>
+  <img src="https://img.shields.io/badge/platform-Windows-54adf7" alt="Windows">
+</p>
 
-> Status: early, APIs will change until 1.0. Decisions and the plan: [`docs/adr/`](docs/adr/README.md). The
-> acceptance test of the layering, a mining HUD reader built only from these parts, is still to come.
+<p align="center">
+  OCR for Star Citizen in Rust: read what the game shows, from a frame of its window, as typed values. An engine on
+  ONNX Runtime, models tuned to the game's UI, ready readers for real screens and the pipelines that train the
+  models. It started as the OCR core of the Quartermaster companion app.
+</p>
 
-## Layout
+- **Engine:** PP-OCRv6 tiny detection and recognition on ONNX Runtime, on the CPU or the GPU (DirectML), batched.
+- **Models for the game:** a recognizer fine-tuned on the game's UI font, a layout detector trained on a screen.
+- **Readers:** the freight manager's warehouse, the character inventory and the refinery terminal, each one call
+  per frame with neutral, typed output.
+- **The game's language:** texts come from the player's `global.ini` by loc key, so readers work with language packs.
+- **Capture:** a live grab of any game window on Windows, with the cursor, its rest and a change gate.
+- **Training included:** one recipe per model turns local data into a model package; a new screen is a recipe and
+  data, no engine code.
 
-| Path | Crate | What |
+> **Status:** early, APIs change until 1.0. Decisions and plans: [`docs/adr/`](docs/adr/README.md).
+> The acceptance test of the layering, a mining HUD reader built only from these parts, is still to come.
+
+## Requirements
+
+- Rust 1.88+ (edition 2024, let chains) and git.
+- Windows 10/11 for the window capture and the GPU; the GPU needs Microsoft's redistributable `DirectML.dll` 1.15
+  next to the executable (Windows' own DirectML refuses the sessions). Other platforms: not tested.
+- For readers that anchor on the game's texts (the refinery): the English `global.ini` of your game (see
+  [The game's texts](#the-games-texts)) and/or the player's language pack.
+- For training: an NVIDIA GPU, Python 3.11 with uv and your own copy of the game ([`training/README.md`](training/README.md)).
+
+## Use
+
+A git dependency (no crates.io), pinned by a release tag or a revision:
+
+```toml
+[dependencies]
+sc-ohseearr-core = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+sc-ohseearr-model-paddle-det-tiny = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+sc-ohseearr-model-sc-rec-latin = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+sc-ohseearr-sc = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+sc-ohseearr-refinery = { git = "https://github.com/w00zla/sc-ohseearr", tag = "<release>" }
+```
+
+Read the text lines of an image:
+
+```rust
+let det = sc_ohseearr_model_paddle_det_tiny::package();
+let rec = sc_ohseearr_model_sc_rec_latin::package();
+let mut ocr = sc_ohseearr_core::Ocr::new(&det, &rec, 3, false)?; // 3 threads, CPU
+for line in ocr.read(&image, 800)? {                             // the frame scaled to 800 px height
+    println!("{} ({:.2})", line.text, line.score);
+}
+```
+
+Read a screen with a reader:
+
+```rust
+use sc_ohseearr_sc::{Frame, LocTable, Locale, Reader};
+
+let english = LocTable::load(Path::new("global-english.ini"))?;
+let locale = Locale::new(None, Some(english))?;                  // a language pack first, then English
+let mut reader = sc_ohseearr_refinery::RefineryReader::new();
+let frame = Frame { id: 1, image: &image, cursor: None, locale: Some(&locale) };
+if reader.probe(&mut ocr, &frame)? {
+    let refinery = reader.read(&mut ocr, &frame)?.output;        // station, work orders, rows
+}
+```
+
+- `ort` is pinned to `=2.0.0-rc.13`: a build has one ONNX Runtime, so a consumer uses that version too.
+- GPU: the feature `directml` of `sc-ohseearr-core`, then `Ocr::new(.., true)`.
+- Frames go in at their native size; the readers scale them by their height (the game's UI scales with it, on 16:9
+  as on ultrawide).
+
+## How it works
+
+| Layer | Crate | What |
 |---|---|---|
-| `crates/core` | `sc-ohseearr-core` | engine: model families, model packages, `Ocr`, line grouping, image helpers |
-| `crates/sc` | `sc-ohseearr-sc` | the game: `Locale` (texts from `global.ini` by loc key, names → loc keys), `CenterUi`, value parsers, the `Reader` interface |
+| `crates/core` | `sc-ohseearr-core` | the engine: model families, model packages, `Ocr`, line grouping, image helpers; nothing about the game |
+| `crates/sc` | `sc-ohseearr-sc` | the game, any screen: `Locale` (texts by loc key, names → loc keys), `CenterUi`, value parsers, the `Reader` interface |
 | `crates/capture-win` | `sc-ohseearr-capture-win` | live capture of a game window on Windows (DXGI), cursor rest, change gate |
-| `crates/test-support` | `sc-ohseearr-test-support` | dev-only (not published): the data root, arguments, frames and OCR the readers' tests and `regress` examples share |
-| `models/*` | `sc-ohseearr-model-*` | model packages (below) |
-| `readers/*` | `sc-ohseearr-<reader>` | readers with their cards and regression setup: `warehouse`, `gear-inventory`, `refinery` |
-| `training/` | — | training pipelines and recipes that produce model packages |
-| `scripts/` | — | `extract-global-ini.{ps1,sh}`: the game's English texts from `Data.p4k` with a StarBreaker CLI (any tool that extracts files from `Data.p4k` does the same) |
+| `models/*` | `sc-ohseearr-model-*` | model packages, each also a crate |
+| `readers/*` | `sc-ohseearr-<reader>` | one reader each, with its card and regression setup |
+| `training/` | — | the pipelines and recipes that make model packages (Python) |
+| `scripts/` | — | `extract-global-ini.{ps1,sh}`: the game's English texts from `Data.p4k` |
 
-## Readers
+A new screen is a new folder in `readers/` (and maybe in `models/`), not a change to `core` or `sc`.
 
-| Reader | Reads | Pattern |
-|---|---|---|
-| [`warehouse`](readers/warehouse/README.md) | freight manager's warehouse grid and tooltip | a learned layout model, then targeted reads |
-| [`gear-inventory`](readers/gear-inventory/README.md) | character inventory: hovered item's tooltip, page, tile | calibrated geometry around the frame's centre |
-| [`refinery`](readers/refinery/README.md) | refinery terminal's work orders | text anchors by loc key (needs the game's texts) |
-
-Each implements `sc::Reader` (`probe`, `read`, `reset`, `set_diagnostics`) on a `Frame { id, image, cursor,
-locale }` and returns neutral output: what the game shows, uncertain values as `Field` (value, raw text, score,
-ambiguous), names as `Name` with candidate loc keys. Which screen is visible is the app's business.
-
-The game's texts: readers never carry them. Pass a `Locale` built from the player's language pack and/or the English
-table extracted from the game: `Data/Localization/english/global.ini` in `Data.p4k`, taken out with any tool that
-extracts files from it (there are several), e.g. with StarBreaker by our script
-(`scripts/extract-global-ini.ps1 -StarBreaker <starbreaker.exe> -P4k <Data.p4k>`).
-
-## Model families
+### Model families
 
 | Family | Type | What it does |
 |---|---|---|
@@ -50,13 +104,12 @@ extracts files from it (there are several), e.g. with StarBreaker by our script
 
 `Ocr` pairs a detector and a recognizer.
 
-## Model packages
+### Model packages
 
-Each folder under `models/` is a package and a crate at once: `model.onnx`, its manifest `model.toml` (family,
-input normalization, thresholds, classes or dictionary, license, source), `MODEL.md` (what it is for, how it was
-made, measurements) and a crate whose `package()` returns it compiled in. The same folder loads at runtime with
-`ModelPackage::load(dir)`, so a model can be swapped without changing code. `examples/tests/models.rs` runs every
-package on a synthetic image and checks its output shapes against the manifest (no data needed).
+Each folder in `models/` is a package and a crate: `model.onnx`, its manifest `model.toml` (family, input
+normalization, thresholds, classes or dictionary, license, source), `MODEL.md` (purpose, making, measurements) and a
+crate whose `package()` returns it compiled in. `ModelPackage::load(dir)` loads the same folder at run time, so a model
+can be swapped without code changes.
 
 | Package | Family | License | |
 |---|---|---|---|
@@ -64,63 +117,73 @@ package on a synthetic image and checks its output shapes against the manifest (
 | [`sc-rec-latin`](models/sc-rec-latin/MODEL.md) | `ctc-rec` | Apache-2.0 | PP-OCRv6 tiny recognizer cut to Latin, fine-tuned on the game's font |
 | [`sc-warehouse-layout`](models/sc-warehouse-layout/MODEL.md) | `nanodet` | MIT | the freight manager's warehouse grid and tooltip |
 
-## Use
+### Readers
 
-Git dependency (no crates.io releases), pinned by tag:
+| Reader | Reads | Pattern |
+|---|---|---|
+| [`warehouse`](readers/warehouse/README.md) | the freight manager's warehouse: grid, hovered tile, tooltip | a learned layout model, then targeted reads |
+| [`gear-inventory`](readers/gear-inventory/README.md) | the character inventory: the hovered item's tooltip, page, tile | calibrated geometry around the frame's centre |
+| [`refinery`](readers/refinery/README.md) | the refinery terminal's work orders | text anchors by loc key |
 
-```toml
-[dependencies]
-sc-ohseearr-core = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.1.0" }
-sc-ohseearr-model-paddle-det-tiny = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.1.0" }
-sc-ohseearr-model-sc-rec-latin = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.1.0" }
+Each implements `sc::Reader`: `probe` (is my screen in view, cheap), `read`, `reset`, `set_diagnostics`, on a
+`Frame { id, image, cursor, locale }`. A reader keeps its own state across frames. The output is neutral, what the
+game shows: uncertain values as `Field` (value, raw text, score, ambiguous), names as `Name` with candidate loc keys;
+diagnostics (all text boxes, fit internals) come separately. Which screen is visible and how often to read is the
+app's business.
+
+### The game's texts
+
+Readers carry no game text. They anchor on loc keys and take the texts from the frame's `Locale`: the player's
+language pack (`data/Localization/<language>/global.ini`, picked by `user.cfg`) and the game's English table. The
+English table lives inside `Data.p4k` as `Data/Localization/english/global.ini`; any tool that extracts files from
+`Data.p4k` gets it (there are several). `scripts/extract-global-ini.{ps1,sh}` does it with StarBreaker and names the
+file by the game build:
+
+```powershell
+scripts/extract-global-ini.ps1 -StarBreaker <starbreaker.exe> -P4k <install>/LIVE/Data.p4k -Out <dir>   # Linux: scripts/extract-global-ini.sh
 ```
 
-```rust
-let det = sc_ohseearr_model_paddle_det_tiny::package();
-let rec = sc_ohseearr_model_sc_rec_latin::package();
-let mut ocr = sc_ohseearr_core::Ocr::new(&det, &rec, 3, false)?;
-for line in ocr.read(&image, 800)? {
-    println!("{} ({:.2})", line.text, line.score);
-}
-```
-
-- `ort` is pinned to `=2.0.0-rc.13`: a build has one ONNX Runtime, so a consumer uses that version too.
-- GPU: feature `directml` (Windows) and Microsoft's redistributable `DirectML.dll` 1.15 next to the executable;
-  Windows 10's own DirectML refuses the sessions.
-- The models want the UI at its native look: scale frames by their height (the game's UI scales with it, on 16:9
-  like on ultrawide) and scale small texts up before detecting them.
-
-Examples (`examples/`): `ocr_dump` (detect and read an image, with package folders to try other models) and
-`layout_dump` (the warehouse layout model plus targeted reads).
+## Development
 
 ```sh
-cargo run --release --example ocr_dump -- <image> [max_height] [threads] [--det <dir>] [--rec <dir>]
+cargo test --release --workspace                  # tests on local data skip what is missing
+cargo run --release --example ocr_dump -- <image> [max_height] [threads] [--det <dir>] [--rec <dir>] [--gpu]
 cargo run --release --example layout_dump -- <image> [x y w h]
-cargo run --release -p sc-ohseearr-warehouse --example regress-warehouse -- [folders] [--data <root>] [--threads n]   # likewise regress-gear-inventory, regress-refinery (--english <global.ini>)
-cargo test --release --workspace
+cargo run --release -p sc-ohseearr-refinery --example regress-refinery -- --english <global.ini>   # likewise regress-warehouse, regress-gear-inventory
 ```
 
-## Data root
+- `examples/tests/models.rs` runs every model package on a synthetic image and checks its outputs against the
+  manifest (no data needed).
+- Each reader's `regress` example prints its output per frame over its regression set: compare the lines before and
+  after a change. Results must not change silently.
+- Training: [`training/README.md`](training/README.md) (setup, the fonts and language files you provide, recipes).
 
-Test, regression and training data (screenshots, recordings, line crops, fonts) are not in the repository. Everything
-that reads them, the tests, the `regress` examples (`--data <root>`) and the training pipelines (`--data-root
-<dir>`), looks in the **data root**: `$SC_OHSEEARR_DATA`, else `local/` in the repository (gitignored). Below it:
-`regression/<reader>/<set>/` (the regression sets: the apps' debug recordings, the only data the readers'
-`regression.toml` and the apps' regression dumps refer to, ADR 0014), `screenshots/…` and `stock_scan_debug/…`
-(scratch for analysis and prototyping, no test fixture; the readers' old screenshot tests still read
-`screenshots/` until they are replaced), `training/<id>/` (training runs). Tests skip what is
-missing.
+**Data root.** Local data stays out of git: `$SC_OHSEEARR_DATA`, else `local/` in the checkout (gitignored). The tests,
+the `regress` examples (`--data <root>`) and the training pipelines (`--data-root <dir>`) read from it:
+
+| Folder | What |
+|---|---|
+| `regression/<reader>/<set>/` | the regression sets: debug recordings the readers' `regression.toml` list (ADR 0014) |
+| `training/<id>/` | training runs |
+| `screenshots/`, `stock_scan_debug/` | scratch for analysis and prototyping, never a fixture (the readers' older screenshot tests still read `screenshots/` until they are replaced) |
 
 ## Game data and fan content
 
-This repository holds game data only as small excerpts that tests concretely need (a few loc keys, single crops or
-frames, each with its source noted; ADR 0015), never whole game files, fonts or recordings. The readers take the
-game's texts from your own installation; the training pipelines read data exported from your own copy of the game.
+The repository holds game data only as small excerpts a test concretely needs (a few loc keys, single crops or
+frames, each with its source noted), never whole game files, fonts or recordings
+([ADR 0015](docs/adr/0015-small-game-data-excerpts-in-git.md)). The readers take the game's texts from your own
+installation; training uses data from your own copy of the game.
 
 sc-ohseearr is an unofficial Star Citizen fan project, not endorsed by or affiliated with the Cloud Imperium group of
 companies. Game content and materials are copyright Cloud Imperium Rights LLC and Cloud Imperium Rights Ltd. Star
 Citizen® is a registered trademark of Cloud Imperium Rights LLC.
 
+## Credits
+
+[PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) (PP-OCRv6 detector and recognizer),
+[NanoDet](https://github.com/RangiLyu/nanodet) (NanoDet-Plus), [ONNX Runtime](https://onnxruntime.ai/) through
+[`ort`](https://github.com/pykeio/ort), [StarBreaker](https://github.com/diogotr7/StarBreaker) for reading `Data.p4k`.
+
 ## License
 
-Code: MIT (`LICENSE`). Each model package states its own license; see `NOTICE`.
+Code: MIT, see [LICENSE](LICENSE). Each model package states its own license; see [NOTICE](NOTICE).
