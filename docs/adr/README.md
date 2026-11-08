@@ -23,3 +23,4 @@
 | [0019](0019-recipe-resources-section.md) | The machine's settings live in a recipe's `resources` section | accepted | 2026-11-08 |
 | [0020](0020-training-sources-in-their-own-folder.md) | Training sources live in `sources/`; scratch is scratch for training too | accepted | 2026-11-08 |
 | [0021](0021-reader-test-frames-in-a-fixtures-repository.md) | The readers' tests assert on recording frames from a separate fixtures repository | accepted | 2026-11-08 |
+| [0022](0022-public-release-before-the-mining-hud.md) | The public release does not wait for the mining HUD reader | accepted | 2026-11-08 |
