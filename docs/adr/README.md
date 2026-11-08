@@ -19,3 +19,5 @@
 | [0015](0015-small-game-data-excerpts-in-git.md) | Small game-data excerpts may go into git; the rest is exported by a script | accepted (translation fetching superseded by 0016) | 2026-11-08 |
 | [0016](0016-translations-are-fetched-by-the-user.md) | Translation files are the user's to get; the script exports only the English table | accepted | 2026-11-08 |
 | [0017](0017-apps-make-every-model.md) | The app makes every model; a reader gets the engines it needs | accepted | 2026-11-08 |
+| [0018](0018-refinery-digits-no-synthetic-retrain.md) | Small refinery digits at 1080p: no synthetic retrain; apps gate on the score | accepted | 2026-11-08 |
+| [0019](0019-recipe-resources-section.md) | The machine's settings live in a recipe's `resources` section | accepted | 2026-11-08 |
