@@ -12,7 +12,8 @@ Output: `<root>/ocr-train/teacher/labels.tsv` (file, text; no header) and `<root
 
   PY training/tools/teacher_lines.py [--data-root <dir>] [--teacher <root>/ocr-teacher]
 PY = local/detector/.venv/Scripts/python.exe -I (from the repository root). The data root: `--data-root`, else
-$SC_OHSEEARR_DATA, else <repo>/local (frames in its stock_scan_debug/ and screenshots/).
+$SC_OHSEEARR_DATA, else <repo>/local (frames in its sources/: the recordings as qm-inventory-debug-<rec>/, the
+refinery screenshots under their folder names).
 """
 import argparse
 import os
@@ -63,7 +64,7 @@ def write(out_dir, items, header):
 def warehouse(local, teacher, rec_id, folder):
     for name in sorted(os.listdir(f"{teacher}/{folder}")):
         if name.startswith("boxes-"):
-            img = f"{local}/stock_scan_debug/qm-inventory-debug-{rec_id}/{name[6:-4]}.jpg"
+            img = f"{local}/sources/qm-inventory-debug-{rec_id}/{name[6:-4]}.jpg"
             for b in boxes(f"{teacher}/{folder}/{name}"):
                 yield img, b, f"wh-{folder[-4:]}"
 
@@ -73,7 +74,7 @@ def refinery(local, teacher, gate: bool):
         d, stem = name[:-4].split("__")
         if (stem[-3:] in GATE) != gate:
             continue
-        folder = f"{local}/screenshots/{d.replace('_', ' ')}"
+        folder = f"{local}/sources/{d.replace('_', ' ')}"
         img = next(f"{folder}/{f}" for f in os.listdir(folder) if os.path.splitext(f)[0] == stem)
         for b in boxes(f"{teacher}/ref/{name}"):
             yield img, b, "refinery"

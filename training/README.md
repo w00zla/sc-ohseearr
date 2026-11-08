@@ -10,7 +10,8 @@ Pipelines that turn a **recipe** (one YAML file per model) and local data into a
 
 Training data stays in the data root (README.md, ["Data root"](../README.md#data-root)): game fonts, screenshots,
 recordings, language files and generated datasets are whole files, which never go into git (only small
-excerpts a test needs). Code and recipes are versioned; the English `global.ini` comes from
+excerpts a test needs). The screenshots and recordings a recipe or tool reads lie in `sources/`, not in the scratch
+folders `screenshots/` and `stock_scan_debug/`. Code and recipes are versioned; the English `global.ini` comes from
 any tool that extracts it from `Data.p4k` (our `scripts/extract-global-ini.{ps1,sh}` with StarBreaker), the fonts
 and a translation are placed by hand as below.
 

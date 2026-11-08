@@ -15,9 +15,10 @@
 | [0011](0011-dataset-converters-without-python-in-the-app.md) | The app writes datasets from its recordings in Rust; tools over generic inputs live here | accepted | 2026-11-07 |
 | [0012](0012-apps-provide-the-english-table.md) | Each app decides how it provides the English table | accepted | 2026-11-08 |
 | [0013](0013-readers-instead-of-use-cases-and-screen-readers.md) | "Reader" as the one term: `readers/` and the `Reader` trait | accepted | 2026-11-08 |
-| [0014](0014-regression-data-only-from-regression-folders.md) | Regression data only from `regression/<reader>/`; screenshots are scratch | accepted | 2026-11-08 |
+| [0014](0014-regression-data-only-from-regression-folders.md) | Regression data only from `regression/<reader>/`; screenshots are scratch | accepted (training-sources bullet superseded by 0020) | 2026-11-08 |
 | [0015](0015-small-game-data-excerpts-in-git.md) | Small game-data excerpts may go into git; the rest is exported by a script | accepted (translation fetching superseded by 0016) | 2026-11-08 |
 | [0016](0016-translations-are-fetched-by-the-user.md) | Translation files are the user's to get; the script exports only the English table | accepted | 2026-11-08 |
 | [0017](0017-apps-make-every-model.md) | The app makes every model; a reader gets the engines it needs | accepted | 2026-11-08 |
 | [0018](0018-refinery-digits-no-synthetic-retrain.md) | Small refinery digits at 1080p: no synthetic retrain; apps gate on the score | accepted | 2026-11-08 |
 | [0019](0019-recipe-resources-section.md) | The machine's settings live in a recipe's `resources` section | accepted | 2026-11-08 |
+| [0020](0020-training-sources-in-their-own-folder.md) | Training sources live in `sources/`; scratch is scratch for training too | accepted | 2026-11-08 |

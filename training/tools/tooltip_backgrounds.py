@@ -22,7 +22,7 @@ import cv2
 import numpy as np
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-REC = "stock_scan_debug/qm-inventory-debug-"
+REC = "sources/qm-inventory-debug-"
 DEFAULT_SETS = {"2503": REC + "1793452503", "8932": REC + "1793448932"}
 
 

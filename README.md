@@ -211,8 +211,9 @@ the `regress` examples (`--data <root>`) and the training pipelines (`--data-roo
 | Folder | What |
 |---|---|
 | `regression/<reader>/<set>/` | the regression sets: debug recordings the readers' `regression.toml` list |
+| `sources/<set>/` | the training sources: recordings and screenshots the recipes and `training/tools/` read |
 | `training/<id>/` | training runs |
-| `screenshots/`, `stock_scan_debug/` | scratch for analysis and prototyping, never a regression set (the readers' screenshot tests read `screenshots/`) |
+| `screenshots/`, `stock_scan_debug/` | scratch for analysis and prototyping, never a regression set or a training source (the readers' screenshot tests read `screenshots/`) |
 
 ## Game data and fan content
 
