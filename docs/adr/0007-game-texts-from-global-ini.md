@@ -1,6 +1,6 @@
 # 0007. Game texts only from global.ini, no compiled-in texts
 
-- Status: accepted
+- Status: accepted; the Quartermaster example in its last decision bullet superseded by [0012](0012-apps-provide-the-english-table.md)
 - Date: 2026-11-05
 - Scope: `crates/sc`, readers
 
