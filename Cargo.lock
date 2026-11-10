@@ -477,6 +477,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "sc-ohseearr-mining-hud"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "sc-ohseearr-core",
+ "sc-ohseearr-sc",
+ "sc-ohseearr-test-support",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "sc-ohseearr-model-paddle-det-tiny"
 version = "0.1.0"
 dependencies = [
