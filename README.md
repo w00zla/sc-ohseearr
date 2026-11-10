@@ -19,7 +19,7 @@
 - **Engine:** PP-OCRv6 tiny detection and recognition on ONNX Runtime, on the CPU or the GPU (DirectML), batched.
 - **Models for the game:** a recognizer fine-tuned on the game's UI font, a layout detector trained on a screen.
 - **Readers:** the freight manager's warehouse, the character inventory, the refinery terminal and the mining HUD's
-  radar score, each one call per frame with neutral, typed output.
+  signature, each one call per frame with neutral, typed output.
 - **The game's language:** texts come from the player's `global.ini` by loc key, so readers work with language packs.
 - **Capture:** a live grab of any game window, with the cursor, its rest and a change gate (Windows; Linux is work in
   progress).
@@ -165,7 +165,7 @@ can be swapped without code changes.
 | [`warehouse`](readers/warehouse/README.md) | the freight manager's warehouse: grid, hovered tile, tooltip | a learned layout model, then targeted reads |
 | [`gear-inventory`](readers/gear-inventory/README.md) | the character inventory: the hovered item's tooltip, page, tile | calibrated geometry around the frame's centre |
 | [`refinery`](readers/refinery/README.md) | the refinery terminal's work orders | text anchors by loc key |
-| [`mining-hud`](readers/mining-hud/README.md) | the radar score of a ship's scan | a window around the HUD's centre, the number by its form |
+| [`mining-hud`](readers/mining-hud/README.md) | the signature of a ship's scan | a window around the HUD's centre, the number by its form |
 
 Each implements `sc::Reader`: `probe` (is my screen in view, cheap), `read`, `reset`, `set_diagnostics`, on a
 `Frame { id, image, cursor, locale }`. A reader keeps its own state across frames. The output is neutral, what the

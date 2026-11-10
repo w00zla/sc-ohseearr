@@ -1,10 +1,10 @@
-//! The mining HUD's reader: the radar score a ship's scan shows for an ore or harvestable spot, a small plate (a
+//! The mining HUD's reader: the signature a ship's scan shows for an ore or harvestable spot, a small plate (a
 //! pin icon and a number such as "42,000") above the heading tape.
 //!
 //! The plate moves with the HUD (it sways, and tilts with the head), so it has no fixed place: a window around
-//! the HUD's centre is cut out, upscaled and read, and the score is the line written as the game writes it, with
+//! the HUD's centre is cut out, upscaled and read, and the signature is the line written as the game writes it, with
 //! thousands separators and at least 1,000. Nothing else anchors it (no label, hence no locale): any such number
-//! in the window is taken for the score, so the app reads only while a ship's scan HUD is up.
+//! in the window is taken for the signature, so the app reads only while a ship's scan HUD is up.
 //!
 //! Resolution independent: the window is measured in shares of the frame's height (the game's UI scales with it).
 
@@ -22,8 +22,8 @@ const READ_HEIGHT: f32 = 3200.0;
 /// 1080 over the lines read without the icon), and a character's width in it, a share of that height (0.38–0.41)
 const NUMBER_HEIGHT: f32 = 0.0155;
 const CHAR_WIDTH: f32 = 0.40;
-/// What a score is written with: a line that looks like a misread score is read again as these only
-const SCORE_CHARS: &str = "0123456789,";
+/// What a signature is written with: a line that looks like a misread signature is read again as these only
+const SIGNATURE_CHARS: &str = "0123456789,";
 
 // ---------------------------------------------------------------------------------------------------------------
 // Output
@@ -31,9 +31,9 @@ const SCORE_CHARS: &str = "0123456789,";
 /// What the mining HUD shows.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct MiningHud {
-    /// The scan's radar score (1,000 and up). Nothing read (`Field::none`): no plate in view; a text without a
+    /// The scan's signature (1,000 and up). Nothing read (`Field::none`): no plate in view; a text without a
     /// value: a plate whose number could not be read.
-    pub radar_score: Field<u32>,
+    pub signature: Field<u32>,
     /// The number's box (frame pixels) for a plate found, without the pin icon, for an app that draws next to it: as
     /// the detector gave it, or, where the icon was read into the line, a box of a number's size at the line's right
     /// edge and middle height.
@@ -77,10 +77,10 @@ impl Reader for MiningHudReader {
     type Output = MiningHud;
     type Diagnostics = MiningHudDiagnostics;
 
-    /// Whether a radar score is in view: the full read, kept for `read` of the same frame.
+    /// Whether a signature is in view: the full read, kept for `read` of the same frame.
     fn probe(&mut self, ocr: &mut Ocr, frame: &Frame) -> Result<bool, ReadError> {
         let reading = scan(ocr, frame)?;
-        let found = reading.output.radar_score.value.is_some();
+        let found = reading.output.signature.value.is_some();
         self.last = Some((frame.id, reading));
         Ok(found)
     }
@@ -119,20 +119,20 @@ fn scan(ocr: &mut Ocr, frame: &Frame) -> Result<Reading<MiningHud, MiningHudDiag
     let big = resize(&piece, piece.width() * scale, piece.height() * scale, FilterType::CatmullRom);
     let lines = ocr.read(&big, big.height())?;
 
-    // The best scored line that reads as a score; else a line that looks like one misread ("54,00D"), read again
+    // The best scored line that reads as a signature; else a line that looks like one misread ("54,00D"), read again
     // as digits and commas only
     let best = |a: &&TextBox, b: &&TextBox| a.score.total_cmp(&b.score);
-    let (radar_score, found) = match lines.iter().filter(|l| score(&l.text).is_some()).max_by(best) {
+    let (signature, found) = match lines.iter().filter(|l| signature(&l.text).is_some()).max_by(best) {
         Some(l) => {
             // Anything before the number is the icon read into the line: the box is wider and higher than the number
             let number = l.text.split_whitespace().last().unwrap_or_default();
             let with_icon = (number != l.text).then(|| number.chars().count());
-            (Field::new(score(&l.text), l.text.clone(), l.score, false), Some((l.rect, with_icon)))
+            (Field::new(signature(&l.text), l.text.clone(), l.score, false), Some((l.rect, with_icon)))
         }
-        None => match lines.iter().filter(|l| score_like(&l.text)).max_by(best) {
+        None => match lines.iter().filter(|l| signature_like(&l.text)).max_by(best) {
             Some(l) => {
-                let again = ocr.recognize_images_only(&[crop(&big, l.rect)], SCORE_CHARS)?.pop();
-                let field = match again.and_then(|(text, s)| score(&text).map(|v| (v, text, s))) {
+                let again = ocr.recognize_images_only(&[crop(&big, l.rect)], SIGNATURE_CHARS)?.pop();
+                let field = match again.and_then(|(text, s)| signature(&text).map(|v| (v, text, s))) {
                     Some((v, text, s)) => Field::new(Some(v), text, s, false),
                     None => Field::new(None, l.text.clone(), l.score, false),
                 };
@@ -152,7 +152,7 @@ fn scan(ocr: &mut Ocr, frame: &Frame) -> Result<Reading<MiningHud, MiningHudDiag
     });
     let boxes = lines.into_iter().map(|l| TextBox { rect: in_frame(l.rect), ..l }).collect();
     Ok(Reading {
-        output: MiningHud { radar_score, rect },
+        output: MiningHud { signature, rect },
         diagnostics: MiningHudDiagnostics { boxes, window: Some(window) },
     })
 }
@@ -165,10 +165,10 @@ fn number_rect(line: Rect, chars: usize, frame_height: u32) -> Rect {
     Rect { x0: line.x1 - w, y0: line.cy() - h / 2.0, x1: line.x1, y1: line.cy() + h / 2.0 }
 }
 
-/// A radar score as the game writes it: "42,000", "3,170", "1,250,000" -> the number. Always with thousands
+/// A signature as the game writes it: "42,000", "3,170", "1,250,000" -> the number. Always with thousands
 /// separators (so 1,000 and up), no leading zero. The pin icon before it is often read as a character of its own
 /// ("9 20,000", ", 42,000"): only the text after the last blank counts.
-fn score(text: &str) -> Option<u32> {
+fn signature(text: &str) -> Option<u32> {
     let digits = |g: &str| g.chars().all(|c| c.is_ascii_digit());
     let mut groups = text.split_whitespace().last()?.split(',');
     let first = groups.next()?;
@@ -182,17 +182,17 @@ fn score(text: &str) -> Option<u32> {
         }
         number.push_str(g);
     }
-    // No separator: not a score (a heading, a distance)
+    // No separator: not a signature (a heading, a distance)
     if number.len() == first.len() {
         return None;
     }
     number.parse().ok()
 }
 
-/// Whether a text has a score's shape with some digits misread ("54,00D", "14,0D0"): one word, groups of three
+/// Whether a text has a signature's shape with some digits misread ("54,00D", "14,0D0"): one word, groups of three
 /// after each comma, more than half of it digits. A text with a blank is left alone: the icon read into it would
 /// become a digit when read as digits only.
-fn score_like(text: &str) -> bool {
+fn signature_like(text: &str) -> bool {
     let t = text.trim();
     let mut groups = t.split(',');
     let first = groups.next().unwrap_or_default();
@@ -213,34 +213,34 @@ mod tests {
     use image::RgbImage;
 
     #[test]
-    fn scores_as_the_game_writes_them() {
-        assert_eq!(score("42,000"), Some(42000));
-        assert_eq!(score("3,170"), Some(3170));
-        assert_eq!(score("1,250,000"), Some(1250000));
+    fn signatures_as_the_game_writes_them() {
+        assert_eq!(signature("42,000"), Some(42000));
+        assert_eq!(signature("3,170"), Some(3170));
+        assert_eq!(signature("1,250,000"), Some(1250000));
         // The icon read as a character of its own
-        assert_eq!(score("9 20,000"), Some(20000));
-        assert_eq!(score(", 42,000"), Some(42000));
-        assert_eq!(score("Ļ 29,740 "), Some(29740));
+        assert_eq!(signature("9 20,000"), Some(20000));
+        assert_eq!(signature(", 42,000"), Some(42000));
+        assert_eq!(signature("Ļ 29,740 "), Some(29740));
         // No separator, a wrong group, a leading zero, other texts
-        assert_eq!(score("2104"), None);
-        assert_eq!(score("8,70"), None);
-        assert_eq!(score("0,500"), None);
-        assert_eq!(score("1234,000"), None);
-        assert_eq!(score("54,00D"), None);
-        assert_eq!(score("3,0 G"), None);
-        assert_eq!(score("5.0km"), None);
-        assert_eq!(score(""), None);
+        assert_eq!(signature("2104"), None);
+        assert_eq!(signature("8,70"), None);
+        assert_eq!(signature("0,500"), None);
+        assert_eq!(signature("1234,000"), None);
+        assert_eq!(signature("54,00D"), None);
+        assert_eq!(signature("3,0 G"), None);
+        assert_eq!(signature("5.0km"), None);
+        assert_eq!(signature(""), None);
     }
 
     #[test]
-    fn misread_scores_keep_their_shape() {
-        assert!(score_like("54,00D"));
-        assert!(score_like("14,0D0"));
-        assert!(!score_like("9 54,00D"), "the icon would be read as a digit");
-        assert!(!score_like("8,70"));
-        assert!(!score_like("UNK,NOW"));
-        assert!(!score_like("5.0km"));
-        assert!(!score_like("140"));
+    fn misread_signatures_keep_their_shape() {
+        assert!(signature_like("54,00D"));
+        assert!(signature_like("14,0D0"));
+        assert!(!signature_like("9 54,00D"), "the icon would be read as a digit");
+        assert!(!signature_like("8,70"));
+        assert!(!signature_like("UNK,NOW"));
+        assert!(!signature_like("5.0km"));
+        assert!(!signature_like("140"));
     }
 
     #[test]
@@ -268,7 +268,7 @@ mod tests {
         let mut reader = MiningHudReader::new();
         assert!(!reader.probe(&mut ocr, &frame).unwrap());
         let reading = reader.read(&mut ocr, &frame).unwrap();
-        assert_eq!(reading.output, MiningHud { radar_score: Field::none(), rect: None });
+        assert_eq!(reading.output, MiningHud { signature: Field::none(), rect: None });
         assert_eq!(reading.diagnostics.window, Some(window(1920, 1080)));
     }
 }
