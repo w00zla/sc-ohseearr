@@ -8,7 +8,7 @@ Guidance for Claude Code in this repository.
 crates, model packages, readers and pipelines: README.md, "Layout"; each reader's card in `readers/<name>/README.md`.
 
 Status: public on GitHub (w00zla/sc-ohseearr), released by tags. Phases 1–5 of ADR 0004 are built; phase 6, the mining
-HUD reader as the test of the layering (ADR 0009), comes after the public release (ADR 0022). Every decision is an ADR in `docs/adr/`: read `docs/adr/README.md` before
+HUD reader as the test of the layering (ADR 0009), is released in a first part since v0.2.0 (`readers/mining-hud`, the scan's signature). Every decision is an ADR in `docs/adr/`: read `docs/adr/README.md` before
 proposing a design and never re-propose a declined alternative unless its forces changed.
 
 ## Rules
