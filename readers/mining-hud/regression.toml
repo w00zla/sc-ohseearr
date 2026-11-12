@@ -1,0 +1,9 @@
+# The data folders the regression covers (examples/regress.rs), relative to the data root
+# (README.md, "Data root"; only `regression/mining-hud/`): screenshots of a MISC Prospector scanning over a planet on
+# 2026-11-08 (13 at 3840×1600: daylight, night side, the red tint of a hot HUD; 12 at 1920×1080, one without a
+# plate). The images stay local; no expected outputs are kept in git: compare the printed lines before and after a
+# change.
+folders = [
+    "regression/mining-hud/screenshots-2026-11-08-3840x1600",
+    "regression/mining-hud/screenshots-2026-11-08-1920x1080",
+]

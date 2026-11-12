@@ -8,7 +8,7 @@ Guidance for Claude Code in this repository.
 crates, model packages, readers and pipelines: README.md, "Layout"; each reader's card in `readers/<name>/README.md`.
 
 Status: public on GitHub (w00zla/sc-ohseearr), released by tags. Phases 1–5 of ADR 0004 are built; phase 6, the mining
-HUD reader as the test of the layering (ADR 0009), comes after the public release (ADR 0022). Every decision is an ADR in `docs/adr/`: read `docs/adr/README.md` before
+HUD reader as the test of the layering (ADR 0009), is released in a first part since v0.2.0 (`readers/mining-hud`, the scan's signature). Every decision is an ADR in `docs/adr/`: read `docs/adr/README.md` before
 proposing a design and never re-propose a declined alternative unless its forces changed.
 
 ## Rules
@@ -47,7 +47,7 @@ cargo clippy --release --workspace --all-targets --features sc-ohseearr-core/dir
 cargo fmt --all
 cargo run --release --example ocr_dump -- <image> [max_height] [threads] [--det <dir>] [--rec <dir>] [--gpu]
 cargo run --release --example layout_dump -- <image> [x y w h] [--layout <dir>]
-cargo run --release -p sc-ohseearr-<reader> --example regress-<reader> -- [folders] [--data <root>] [--threads n (3)] [--gpu]   # reader: warehouse, gear-inventory, refinery (needs --english <global.ini> and/or --pack <ini>)
+cargo run --release -p sc-ohseearr-<reader> --example regress-<reader> -- [folders] [--data <root>] [--threads n (3)] [--gpu]   # reader: warehouse, gear-inventory, refinery (needs --english <global.ini> and/or --pack <ini>), mining-hud (no ini)
 cargo run --release -p sc-ohseearr-capture-win --example grab -- [exe] [out.png] [delay_s]
 scripts/extract-global-ini.ps1 -StarBreaker <starbreaker.exe> -P4k <Data.p4k> -Out <dir>   # or .sh; -> global-english-<version>.ini
 scripts/extract-fonts.ps1 -StarBreaker <starbreaker.exe> [-P4k <Data.p4k>]                 # or .sh; -> <data root>/fonts-sc/ttf (via training/tools/swf2ttf.py)
