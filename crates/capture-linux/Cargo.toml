@@ -1,0 +1,21 @@
+[package]
+name = "sc-ohseearr-capture-linux"
+description = "Live capture of an executable's window on Linux (ScreenCast portal, PipeWire, cursor), no Tauri"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+sc-ohseearr-capture = { workspace = true }
+log = { workspace = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# The ScreenCast portal over D-Bus. zbus on its own executor (`async-io`), not on tokio: cargo unifies zbus's
+# features across a build, and an app's other portal users (file dialogs) run without a tokio runtime
+ashpd = { version = "0.14", default-features = false, features = ["async-io", "screencast"] }
+# The stream; builds against libpipewire's headers with bindgen (clang)
+pipewire = "0.10"
+
+[dev-dependencies]
+image = { workspace = true, features = ["png"] }

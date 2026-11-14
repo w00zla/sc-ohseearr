@@ -41,17 +41,6 @@ pub(crate) fn cursor_in_crop(cursor: (i32, i32), desktop: Rect, crop: &Crop) -> 
     (x >= 0 && y >= 0 && (x as u32) < crop.width && (y as u32) < crop.height).then_some((x as f32, y as f32))
 }
 
-/// BGRA rows of `pitch` bytes (padded) packed tightly.
-#[cfg_attr(not(windows), allow(dead_code))]
-pub(crate) fn unpad(data: &[u8], pitch: usize, width: u32, height: u32) -> Vec<u8> {
-    let row = width as usize * 4;
-    let mut out = Vec::with_capacity(row * height as usize);
-    for line in data.chunks(pitch).take(height as usize) {
-        out.extend_from_slice(&line[..row]);
-    }
-    out
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -87,15 +76,5 @@ mod tests {
         assert_eq!(cursor_in_crop((-1801, 50), desktop, &c), None);
         assert_eq!(cursor_in_crop((-1800, 950), desktop, &c), None);
         assert_eq!(cursor_in_crop((-200, 100), desktop, &c), None);
-    }
-
-    #[test]
-    fn bgra_rows_with_padding() {
-        // 2×2 pixels, rows padded to 12 bytes
-        let data = [
-            1, 2, 3, 255, 4, 5, 6, 255, 0, 0, 0, 0, //
-            7, 8, 9, 255, 10, 11, 12, 255, 0, 0, 0, 0,
-        ];
-        assert_eq!(unpad(&data, 12, 2, 2), vec![1, 2, 3, 255, 4, 5, 6, 255, 7, 8, 9, 255, 10, 11, 12, 255]);
     }
 }

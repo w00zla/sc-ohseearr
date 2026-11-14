@@ -21,17 +21,18 @@
 - **Readers:** the freight manager's warehouse, the character inventory, the refinery terminal and the mining HUD's
   signature, each one call per frame with neutral, typed output.
 - **The game's language:** texts come from the player's `global.ini` by loc key, so readers work with language packs.
-- **Capture:** a live grab of any game window, with the cursor, its rest and a change gate (Windows; Linux is work in
-  progress).
+- **Capture:** a live grab of the game window, with the cursor, its rest and a change gate: on Windows by the
+  executable (DXGI), on Linux through the ScreenCast portal and PipeWire (the user picks the window once).
 - **Training included:** one recipe per model turns local data into a model package; a new screen is a recipe and
   data, no engine code.
 
-> **Status:** early, APIs change until 1.0. Linux: OCR and the readers run, the window capture is work in progress.
+> **Status:** early, APIs change until 1.0. The Linux window capture is verified on KDE Plasma (Wayland) only.
 
 ## Requirements
 
 - Rust 1.88+ (edition 2024, let chains) and git.
-- Windows 10/11 or Linux. OCR and the readers run on both; the game-window capture is Windows only so far.
+- Windows 10/11 or Linux. Building on Linux needs libpipewire's headers (`libpipewire-0.3-dev`, `pipewire-devel`)
+  and clang, for the window capture; that capture needs a desktop with the ScreenCast portal (xdg-desktop-portal).
 - GPU acceleration under Windows needs Microsoft's redistributable `DirectML.dll` 1.15
   next to the executable.
 - For readers that anchor on the game's texts (i.e. the refinery): the `global.ini` of your game and/or a translated ini-file (see

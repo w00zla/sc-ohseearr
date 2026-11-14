@@ -14,7 +14,9 @@ The code is a stack; a layer knows only the ones below it.
   interface.
 - **readers** know one screen each and build on `sc` and `core`.
 - **models** are packages of weights and a manifest; each is also a crate that carries its package compiled in.
-- **capture-win** grabs the game window on Windows; it depends on nothing of the rest.
+- **capture** holds what a capture loop needs on any platform (the captured pixels, the change gate, the cursor's
+  rest); **capture-win** and **capture-linux** grab the game window on their platform. The three depend on nothing
+  of the rest.
 - **the app** (a consumer outside this repository) sits on top: it captures, decides which screen is visible, makes
   every engine and passes it in.
 
@@ -24,7 +26,9 @@ A new screen is a new folder in `readers/` (and maybe one in `models/`), not a c
 |---|---|---|
 | core | [`crates/core`](../crates/core) | `Ocr` (a `DbDetector` and a `CtcRecognizer`), `NanoDet`, `ModelPackage`, `group_lines`, image helpers; ONNX Runtime on the CPU or DirectML |
 | sc | [`crates/sc`](../crates/sc) | `Locale` and `LocTable`, `CenterUi`, the parsers (qualities, SCU, counts, durations), the `Reader` trait with `Frame`, `Field`, `Name`, `Reading` |
-| capture-win | [`crates/capture-win`](../crates/capture-win) | `WindowCapture` (DXGI): frame with cursor, cursor rest, change gate |
+| capture | [`crates/capture`](../crates/capture) | `Pixels`, the change gate `Gate`, the cursor-rest detector `Rest` |
+| capture-win | [`crates/capture-win`](../crates/capture-win) | `WindowCapture` (DXGI): the window found by its executable, frame with cursor |
+| capture-linux | [`crates/capture-linux`](../crates/capture-linux) | `WindowCapture` (ScreenCast portal, PipeWire): the window the user picked, frame with cursor, a frame with the cursor at rest |
 | models | [`models/`](../models) | `paddle-det-tiny`, `sc-rec-latin`, `sc-warehouse-layout`: weights, `model.toml`, `MODEL.md`, a crate each |
 | readers | [`readers/`](../readers) | `warehouse`, `gear-inventory`, `refinery`: a crate, a card (`README.md`) and a `regression.toml` each |
 | test-support | [`crates/test-support`](../crates/test-support) | what tests and `regress` examples share: data root, arguments, regression folders, the compiled-in `Ocr` (not published) |
@@ -37,7 +41,7 @@ The app hands every reader the same input and gets neutral, typed output back.
 
 | Step | What happens |
 |---|---|
-| Capture | `capture-win` returns the window's pixels and the mouse cursor; no new image while the window is not in front or nothing changed |
+| Capture | `capture-win` or `capture-linux` returns the window's pixels and the mouse cursor; no new image while nothing changed (on Windows also while the window is not in front) |
 | Frame | the app wraps them: `Frame { id, image, cursor, locale }` (native size; readers scale by the frame's height, the UI scales with it) |
 | Probe | `probe(ocr, frame)` answers "is my screen in view?" cheaply; work it did is kept for `read` of the same `Frame::id` |
 | Read | `read(ocr, frame)` returns `Reading { output, diagnostics }`; a reader keeps its own state across frames (`reset` drops it) |

@@ -29,8 +29,10 @@ use windows::Win32::UI::WindowsAndMessaging::{
 };
 use windows::core::{Interface, PWSTR};
 
-use crate::geometry::{Crop, crop, cursor_in_crop, unpad};
-use crate::{Pixels, Rect};
+use sc_ohseearr_capture::{Pixels, unpad};
+
+use crate::Rect;
+use crate::geometry::{Crop, crop, cursor_in_crop};
 
 // Waiting for a desktop frame: the game presents continuously, a timeout means nothing changed
 const ACQUIRE_TIMEOUT_MS: u32 = 200;
@@ -113,8 +115,9 @@ impl Window {
     }
 }
 
-/// The mouse cursor in screen coordinates (physical pixels).
-pub(crate) fn cursor_pos() -> Option<(i32, i32)> {
+/// The mouse cursor in screen coordinates (physical pixels), wherever it is; what `Rest::observe` of
+/// `sc-ohseearr-capture` takes. None when Windows does not tell (the secure desktop).
+pub fn cursor_pos() -> Option<(i32, i32)> {
     let mut p = POINT::default();
     unsafe { GetCursorPos(&mut p) }.ok().map(|_| (p.x, p.y))
 }

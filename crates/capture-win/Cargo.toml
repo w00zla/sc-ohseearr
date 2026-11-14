@@ -1,13 +1,13 @@
 [package]
 name = "sc-ohseearr-capture-win"
-description = "Live capture of any executable's window on Windows (DXGI duplication, cursor, rest detection, change gate), no Tauri"
+description = "Live capture of any executable's window on Windows (DXGI duplication, cursor), no Tauri"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
 [dependencies]
-image = { workspace = true }
+sc-ohseearr-capture = { workspace = true }
 log = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]

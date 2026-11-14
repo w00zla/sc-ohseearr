@@ -1,6 +1,6 @@
 # 0004. Layered structure: core, sc, capture, models, use cases, training
 
-- Status: accepted; the folder name `usecases/` superseded by [0013](0013-readers-instead-of-use-cases-and-screen-readers.md) (`readers/`)
+- Status: accepted; the folder name `usecases/` superseded by [0013](0013-readers-instead-of-use-cases-and-screen-readers.md) (`readers/`), the rest detection and the change gate in `capture-win` by [0025](0025-linux-capture-through-the-screencast-portal.md) (`crates/capture`)
 - Date: 2026-11-05
 - Scope: repository layout
 
