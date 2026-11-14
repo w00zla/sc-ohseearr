@@ -46,18 +46,20 @@ A git dependency (no crates.io), pinned by a release tag or a revision. Every cr
 ```toml
 [dependencies]
 # The engine and the models
-sc-ohseearr-core = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.2.0" }  # features = ["directml"] for the GPU
-sc-ohseearr-model-paddle-det-tiny = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.2.0" }
-sc-ohseearr-model-sc-rec-latin = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.2.0" }
-sc-ohseearr-model-sc-warehouse-layout = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.2.0" }
+sc-ohseearr-core = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.3.0" }  # features = ["directml"] for the GPU
+sc-ohseearr-model-paddle-det-tiny = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.3.0" }
+sc-ohseearr-model-sc-rec-latin = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.3.0" }
+sc-ohseearr-model-sc-warehouse-layout = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.3.0" }
 # The game: texts, parsers, the reader interface; the readers
-sc-ohseearr-sc = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.2.0" }
-sc-ohseearr-warehouse = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.2.0" }
-sc-ohseearr-gear-inventory = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.2.0" }
-sc-ohseearr-refinery = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.2.0" }
-sc-ohseearr-mining-hud = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.2.0" }
-# The window capture (Windows)
-sc-ohseearr-capture-win = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.2.0" }
+sc-ohseearr-sc = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.3.0" }
+sc-ohseearr-warehouse = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.3.0" }
+sc-ohseearr-gear-inventory = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.3.0" }
+sc-ohseearr-refinery = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.3.0" }
+sc-ohseearr-mining-hud = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.3.0" }
+# The window capture: the shared parts (pixels, change gate, cursor rest), then the platform's
+sc-ohseearr-capture = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.3.0" }
+sc-ohseearr-capture-win = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.3.0" }    # Windows
+sc-ohseearr-capture-linux = { git = "https://github.com/w00zla/sc-ohseearr", tag = "v0.3.0" }  # Linux
 ```
 
 The engine alone, the text lines of an image:
@@ -83,7 +85,8 @@ for d in layout.detect(&image)? {                              // the classes of
 }
 ```
 
-Everything together, the game window read live by all readers:
+Everything together, the game window read live by all readers (the Windows capture; the Linux one opens through
+the portal first: [`crates/capture-linux`](crates/capture-linux)):
 
 ```rust
 use std::path::Path;

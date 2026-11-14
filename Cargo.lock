@@ -865,14 +865,14 @@ checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
 
 [[package]]
 name = "sc-ohseearr-capture"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "image",
 ]
 
 [[package]]
 name = "sc-ohseearr-capture-linux"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ashpd",
  "image",
@@ -883,7 +883,7 @@ dependencies = [
 
 [[package]]
 name = "sc-ohseearr-capture-win"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "image",
  "log",
@@ -893,7 +893,7 @@ dependencies = [
 
 [[package]]
 name = "sc-ohseearr-core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "fast_image_resize",
  "image",
@@ -905,7 +905,7 @@ dependencies = [
 
 [[package]]
 name = "sc-ohseearr-examples"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "image",
  "ort",
@@ -917,7 +917,7 @@ dependencies = [
 
 [[package]]
 name = "sc-ohseearr-gear-inventory"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "image",
  "sc-ohseearr-core",
@@ -929,7 +929,7 @@ dependencies = [
 
 [[package]]
 name = "sc-ohseearr-mining-hud"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "image",
  "sc-ohseearr-core",
@@ -941,28 +941,28 @@ dependencies = [
 
 [[package]]
 name = "sc-ohseearr-model-paddle-det-tiny"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "sc-ohseearr-core",
 ]
 
 [[package]]
 name = "sc-ohseearr-model-sc-rec-latin"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "sc-ohseearr-core",
 ]
 
 [[package]]
 name = "sc-ohseearr-model-sc-warehouse-layout"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "sc-ohseearr-core",
 ]
 
 [[package]]
 name = "sc-ohseearr-refinery"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "image",
  "sc-ohseearr-core",
@@ -974,7 +974,7 @@ dependencies = [
 
 [[package]]
 name = "sc-ohseearr-sc"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "image",
  "log",
@@ -984,7 +984,7 @@ dependencies = [
 
 [[package]]
 name = "sc-ohseearr-test-support"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "image",
  "sc-ohseearr-core",
@@ -996,7 +996,7 @@ dependencies = [
 
 [[package]]
 name = "sc-ohseearr-warehouse"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "image",
  "sc-ohseearr-core",
