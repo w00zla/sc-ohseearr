@@ -1,0 +1,10 @@
+[package]
+name = "sc-ohseearr-capture"
+description = "The platform independent parts of a live capture: captured pixels, the change gate, the cursor's rest"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+image = { workspace = true }

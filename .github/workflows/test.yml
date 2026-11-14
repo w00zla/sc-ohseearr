@@ -44,6 +44,10 @@ jobs:
       - name: cargo fmt
         if: matrix.platform == 'ubuntu-24.04'
         run: cargo fmt --all --check
+      # capture-linux: the pipewire crate builds against libpipewire's headers with bindgen
+      - name: libpipewire headers and libclang
+        if: matrix.platform == 'ubuntu-24.04'
+        run: sudo apt-get update && sudo apt-get install -y libpipewire-0.3-dev libclang-dev
       - name: cargo test
         run: cargo test --release --locked --workspace
       - name: cargo clippy

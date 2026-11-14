@@ -70,9 +70,30 @@ impl Pixels {
     }
 }
 
+/// BGRA rows of `pitch` bytes (padded) packed tightly: the `data` of [`Pixels::Bgra`]. `data` must hold `height`
+/// rows of at least `width` pixels.
+pub fn unpad(data: &[u8], pitch: usize, width: u32, height: u32) -> Vec<u8> {
+    let row = width as usize * 4;
+    let mut out = Vec::with_capacity(row * height as usize);
+    for line in data.chunks(pitch).take(height as usize) {
+        out.extend_from_slice(&line[..row]);
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bgra_rows_with_padding() {
+        // 2×2 pixels, rows padded to 12 bytes
+        let data = [
+            1, 2, 3, 255, 4, 5, 6, 255, 0, 0, 0, 0, //
+            7, 8, 9, 255, 10, 11, 12, 255, 0, 0, 0, 0,
+        ];
+        assert_eq!(unpad(&data, 12, 2, 2), vec![1, 2, 3, 255, 4, 5, 6, 255, 7, 8, 9, 255, 10, 11, 12, 255]);
+    }
 
     #[test]
     fn bgra_and_rgb_give_the_same_picture() {

@@ -5,7 +5,7 @@
 | [0001](0001-own-repository-for-the-ocr-core.md) | Own repository for the OCR core | accepted | 2026-11-05 |
 | [0002](0002-licenses-and-model-weights.md) | MIT for the code, per-package licenses for models, our weights distributed | accepted (data bullet superseded by 0015) | 2026-11-05 |
 | [0003](0003-english-everywhere.md) | English everywhere | accepted | 2026-11-05 |
-| [0004](0004-layered-structure.md) | Layered structure: core, sc, capture, models, use cases, training | accepted (folder name superseded by 0013) | 2026-11-05 |
+| [0004](0004-layered-structure.md) | Layered structure: core, sc, capture, models, use cases, training | accepted (folder name superseded by 0013, the pure capture parts by 0025) | 2026-11-05 |
 | [0005](0005-model-packages-with-a-manifest.md) | Model packages with a manifest, compiled in or loaded | accepted | 2026-11-05 |
 | [0006](0006-neutral-reader-output.md) | Neutral reader output; the companion's readers move over completely | accepted | 2026-11-05 |
 | [0007](0007-game-texts-from-global-ini.md) | Game texts only from global.ini, no compiled-in texts | accepted (Quartermaster example superseded by 0012) | 2026-11-05 |
@@ -26,3 +26,4 @@
 | [0022](0022-public-release-before-the-mining-hud.md) | The public release does not wait for the mining HUD reader | accepted | 2026-11-08 |
 | [0023](0023-pull-requests-tests-and-releases-on-github.md) | Pull requests only, tests on pull requests, releases by tag | accepted | 2026-11-08 |
 | [0024](0024-no-int8-quantization.md) | No int8 quantization of the detector and the recognizer | accepted | 2026-11-08 |
+| [0025](0025-linux-capture-through-the-screencast-portal.md) | Linux capture through the ScreenCast portal and PipeWire; the pure capture parts in their own crate | accepted | 2026-11-14 |

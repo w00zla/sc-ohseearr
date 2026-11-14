@@ -8,7 +8,7 @@ pub const PULL_POLL: Duration = Duration::from_millis(15);
 /// case no read answers (the screen changed, the scan stopped)
 pub const PULL_TIMEOUT_MS: u64 = 3000;
 /// How far the cursor may move and still rest (physical pixels)
-pub(crate) const REST_PX: i32 = 3;
+pub const REST_PX: i32 = 3;
 /// How long it must rest before a grab (the game then shows the tooltip of the tile under it)
 pub const REST: Duration = Duration::from_millis(200);
 
@@ -25,14 +25,6 @@ impl Default for Rest {
 }
 
 impl Rest {
-    /// Looks at the cursor now (Windows; a failing `GetCursorPos` changes nothing).
-    #[cfg(windows)]
-    pub fn update(&mut self) {
-        if let Some(p) = crate::capture::cursor_pos() {
-            self.observe(p, Instant::now());
-        }
-    }
-
     /// The cursor is at `p` (screen pixels) at `now`: it rests while it stays within `REST_PX`.
     pub fn observe(&mut self, p: (i32, i32), now: Instant) {
         if (p.0 - self.at.0).abs() > REST_PX || (p.1 - self.at.1).abs() > REST_PX {

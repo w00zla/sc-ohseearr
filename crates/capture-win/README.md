@@ -1,19 +1,16 @@
 # sc-ohseearr-capture-win
 
 Live capture of any executable's window on Windows, extracted from the Quartermaster companion, without
-Tauri. Windows only; on other platforms the crate builds with its pure parts (pixels, gate, rest logic, crop
-math) and no capture.
+Tauri. Windows only; on other platforms the crate builds without the capture. The frames are
+[`sc-ohseearr-capture`](../capture)'s `Pixels`; the change gate and the cursor-rest detector live there too.
 
 - `WindowCapture::new("StarCitizen.exe")`: finds the process's window by the executable's file name
   (`window()`: in front or not, minimized ones do not count; `is_running()`; `foreground_window()`).
 - `grab()` / `grab_window(window)`: one frame of the window's client area as `Pixels::Bgra`, the mouse
   cursor's position in it, the grab's duration, and why a grab brought no frame (`Skip`: no new image within
   200 ms, only the pointer moved, the window outside the monitor).
-- `Rest`: since when the cursor stays within 3 px (a pulling reader waits for 200 ms of rest, the game then
-  shows the tooltip of the tile under it).
-- `Gate` on `Pixels::thumb()` (a 96×40 grey box average, cheap on 4K frames): idle, a view that came to rest
-  after it moved passes once; during a visit also when it changed or after 2 s.
-- `Pixels::into_rgb()` for the reader.
+- `cursor_pos()`: the mouse cursor on the screen, for `sc-ohseearr-capture`'s `Rest` (a pulling reader waits
+  for 200 ms of rest, the game then shows the tooltip of the tile under it).
 
 ```sh
 cargo run --release -p sc-ohseearr-capture-win --example grab -- StarCitizen.exe grab.png 5
